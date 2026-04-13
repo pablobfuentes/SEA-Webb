@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Assumption",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "project_id",
+    "node_id",
+    "label",
+    "value",
+    "source_type",
+    "confidence",
+    "rationale",
+    "created_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "node_id": { "type": "string", "minLength": 1 },
+    "label": { "type": "string" },
+    "value": true,
+    "unit": {
+      "oneOf": [{ "type": "null" }, { "type": "string" }]
+    },
+    "source_type": {
+      "type": "string",
+      "enum": ["user_confirmed", "imported", "assumed", "calculated"]
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "rationale": { "type": "string" },
+    "created_at": { "type": "string", "minLength": 1 }
+  }
+}

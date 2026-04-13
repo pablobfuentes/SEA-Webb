@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Node",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "project_id",
+    "branch_id",
+    "node_type",
+    "title",
+    "description",
+    "parent_node_id",
+    "state",
+    "order_index",
+    "depth",
+    "child_node_ids",
+    "linked_reference_ids",
+    "linked_calculation_ids",
+    "linked_assumption_ids",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "branch_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "node_type": {
+      "type": "string",
+      "enum": [
+        "problem",
+        "decision",
+        "criterion",
+        "alternative",
+        "assumption",
+        "calculation",
+        "check",
+        "document",
+        "didactic",
+        "output"
+      ]
+    },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "parent_node_id": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "minLength": 1 }
+      ]
+    },
+    "state": {
+      "type": "string",
+      "enum": ["open", "blocked", "pending", "complete"]
+    },
+    "order_index": { "type": "integer" },
+    "depth": { "type": "integer" },
+    "child_node_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "linked_reference_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "linked_calculation_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "linked_assumption_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "created_at": { "type": "string", "minLength": 1 },
+    "updated_at": { "type": "string", "minLength": 1 }
+  }
+}

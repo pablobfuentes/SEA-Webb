@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Document",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "title",
+    "author",
+    "edition",
+    "version_label",
+    "publication_year",
+    "document_type",
+    "authority_level",
+    "topics",
+    "language",
+    "file_path",
+    "content_hash",
+    "approval_status",
+    "normative_classification",
+    "discipline",
+    "standard_family",
+    "created_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "title": { "type": "string" },
+    "author": { "type": "string" },
+    "edition": { "type": "string" },
+    "version_label": { "type": "string" },
+    "publication_year": { "oneOf": [{ "type": "null" }, { "type": "integer" }] },
+    "document_type": { "type": "string" },
+    "authority_level": {
+      "type": "string",
+      "enum": ["primary", "complementary", "contextual"]
+    },
+    "approval_status": {
+      "type": "string",
+      "enum": ["pending", "approved", "rejected"]
+    },
+    "normative_classification": {
+      "type": "string",
+      "enum": ["unknown", "primary_standard", "supporting_document", "reference_document"]
+    },
+    "topics": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "language": { "type": "string", "minLength": 1 },
+    "file_path": { "type": "string", "minLength": 1 },
+    "content_hash": { "type": "string", "minLength": 32 },
+    "discipline": { "oneOf": [{ "type": "null" }, { "type": "string" }] },
+    "standard_family": { "oneOf": [{ "type": "null" }, { "type": "string" }] },
+    "created_at": { "type": "string", "minLength": 1 }
+  }
+}

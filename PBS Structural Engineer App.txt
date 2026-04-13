@@ -1,0 +1,685 @@
+Project: Structural Engineering App
+Leyenda: [x] = cubierto o verificado en structural_tree_app_foundation (documentacion PBS en docs/ y nucleo Block 2). [ ] = pendiente o fuera del alcance actual del foundation.
+
+
+## 0. Definicion del producto y reglas rectoras
++ 0.1 Definir proposito exacto del sistema
+  - [x] Establecer que el sistema es una app local de diseno estructural guiado por arbol de decisiones
+  - [x] Establecer que el arbol del problema es la entidad principal del producto
+  - [x] Establecer que el chat, la wiki, el canvas y el solver son modulos de soporte al arbol
+  - [x] Establecer que la app debe servir tanto para trabajo profesional como para aprendizaje guiado
+  - [x] Establecer que la app debe operar solo sobre documentos autorizados por el usuario
++ 0.2 Definir principios no negociables
+  - [x] Separar motor documental, motor de calculo y motor didactico
+  - [x] Prohibir respuestas tecnicas sin evidencia documental trazable
+  - [x] Prohibir resultados finales criticos generados solo por el LLM
+  - [x] Exigir trazabilidad completa de datos de entrada, formulas, sustituciones y resultados
+  - [x] Exigir control de versiones por proyecto, documento y calculo
+  - [x] Exigir coherencia de unidades en toda operacion
++ 0.3 Definir alcance de la primera version
+  - [x] Limitar el MVP a un dominio tecnico inicial controlado
+  - [x] Definir que el dominio inicial sera comparacion y desarrollo de vigas de acero para claros simples
+  - [x] Definir que el sistema incluira comparacion de alternativas como celosia, viga alveolar, viga armada y viga laminada
+  - [x] Definir que el sistema permitira conservar ramas descartadas y reactivarlas
+  - [ ] Definir que el sistema generara reportes basicos exportables desde el MVP
++ 0.4 Definir criterios de exito del producto
+  - [x] Medir si un usuario puede plantear un problema y desarrollar un arbol completo sin perder trazabilidad
+  - [x] Medir si cada afirmacion tecnica puede abrir su referencia documental
+  - [x] Medir si dos ramas pueden compararse en criterios homogeneos
+  - [x] Medir si un estudiante puede seguir el razonamiento paso a paso
+  - [x] Medir si un ingeniero puede recuperar una decision anterior y reabrir una ruta descartada
++ 0.5 Definir restricciones iniciales del producto
+  - [x] Establecer operacion local sin dependencia obligatoria de nube
+  - [x] Establecer soporte inicial para corpus PDF autorizado por el usuario
+  - [x] Establecer que la normativa activa de cada proyecto controla el universo de respuestas
+  - [x] Establecer que referencias fuera de la normativa activa solo se muestran como complemento
+  - [x] Establecer que los modulos se disenaran para crecer sin romper trazabilidad previa
+
+## 1. Arquitectura funcional general
++ 1.1 Definir modulos nucleares del sistema
+  - [x] Crear modulo de gestion documental autoritativa
+  - [x] Crear modulo de recuperacion documental con citas
+  - [x] Crear modulo de arbol de decisiones y calculo
+  - [ ] Crear modulo de canvas interactivo
+  - [ ] Crear modulo de chat orientado a tareas
+  - [ ] Crear modulo de solver determinista
+  - [ ] Crear modulo de wiki enlazada
+  - [x] Crear modulo de gestion de proyectos y versiones
+  - [ ] Crear modulo de reportes y auditoria
++ 1.2 Definir relaciones entre modulos
+  - [x] Definir como el arbol consume referencias del motor documental
+  - [ ] Definir como el arbol dispara calculos en el solver
+  - [ ] Definir como el chat consulta y modifica el arbol sin reemplazarlo
+  - [ ] Definir como la wiki se conecta a nodos del arbol y a fragmentos documentales
+  - [ ] Definir como reportes consumen nodos, calculos, decisiones y referencias
++ 1.3 Definir flujo principal del usuario
+  - [x] Crear flujo de alta de proyecto
+  - [x] Crear flujo de carga y validacion de documentos
+  - [x] Crear flujo de planteamiento del problema
+  - [x] Crear flujo de generacion del primer abanico de opciones
+  - [x] Crear flujo de seleccion de rama y expansion de subdecisiones
+  - [x] Crear flujo de comparacion de alternativas
+  - [ ] Crear flujo de recalculo y retorno a ramas previas
+  - [ ] Crear flujo de generacion de reporte
++ 1.4 Definir flujos secundarios del usuario
+  - [ ] Crear flujo de consulta puntual de norma desde el chat
+  - [ ] Crear flujo de explicacion didactica desde un nodo concreto
+  - [ ] Crear flujo de apertura de articulos relacionados en la wiki
+  - [x] Crear flujo de clonacion de rama para explorar variante
+  - [x] Crear flujo de archivado de rama descartada
+  - [x] Crear flujo de restauracion de una decision previa
++ 1.5 Definir responsabilidades por capa logica
+  - [x] Reservar al motor documental la responsabilidad de encontrar evidencia
+  - [ ] Reservar al solver la responsabilidad de producir resultados numericos finales
+  - [ ] Reservar al motor didactico la responsabilidad de explicar y contextualizar
+  - [x] Reservar al arbol la responsabilidad de organizar el problema y sus alternativas
+  - [x] Reservar al proyecto la responsabilidad de almacenar historial y configuracion
+
+## 2. Modelo de datos maestro
++ 2.1 Definir entidades principales
+  - [x] Definir entidad Proyecto
+  - [x] Definir entidad Documento
+  - [x] Definir entidad FragmentoDocumental
+  - [x] Definir entidad NormaActiva
+  - [x] Definir entidad Nodo
+  - [x] Definir entidad Rama
+  - [x] Definir entidad Decision
+  - [x] Definir entidad Alternativa
+  - [x] Definir entidad Hipotesis
+  - [x] Definir entidad Variable
+  - [x] Definir entidad Unidad
+  - [x] Definir entidad Calculo
+  - [x] Definir entidad Comprobacion
+  - [x] Definir entidad Referencia
+  - [x] Definir entidad Reporte
+  - [x] Definir entidad Version
++ 2.2 Definir campos de Proyecto
+  - [x] Asignar identificador unico de proyecto
+  - [x] Guardar nombre, descripcion y estado del proyecto
+  - [x] Guardar normativa activa, idioma y sistema de unidades
+  - [x] Guardar conjunto de documentos autorizados
+  - [x] Guardar preferencias de profundidad didactica
+  - [x] Guardar historial de revisiones del proyecto
++ 2.3 Definir campos de Documento y FragmentoDocumental
+  - [x] Guardar identificador, titulo, autor, version, edicion y fecha
+  - [x] Guardar tipo de documento, disciplina y tema principal
+  - [x] Guardar hash o firma para control de cambios
+  - [x] Guardar estructura logica por capitulos, secciones y paginas
+  - [x] Guardar fragmentos indexados con metadatos de origen
+  - [x] Guardar relaciones entre fragmentos vinculados
++ 2.4 Definir campos de Nodo y Rama
+  - [x] Guardar identificador unico de nodo y rama
+  - [x] Guardar tipo de nodo, titulo y descripcion operativa
+  - [x] Guardar estado de nodo y estado de rama
+  - [x] Guardar nodo padre y lista de hijos
+  - [x] Guardar prioridad, orden visual y nivel de expansion
+  - [x] Guardar rama principal asociada y ramas alternativas relacionadas
+  - [x] Guardar timestamps de creacion, actualizacion y cierre
++ 2.5 Definir campos de Decision y Alternativa
+  - [x] Guardar pregunta de decision que origina la bifurcacion
+  - [x] Guardar lista de alternativas generadas
+  - [x] Guardar criterios de comparacion aplicados
+  - [x] Guardar decision seleccionada y razon de seleccion
+  - [x] Guardar alternativas rechazadas con causa
+  - [x] Guardar posibilidad de reactivacion futura de alternativa descartada
++ 2.6 Definir campos de Hipotesis, Variable y Unidad
+  - [x] Guardar nombre canonico de variable
+  - [x] Guardar valor, unidad, fuente y nivel de confianza
+  - [x] Guardar si el dato es asumido, calculado, importado o confirmado por usuario
+  - [x] Guardar conversiones realizadas y sistema de unidades objetivo
+  - [x] Guardar dependencias entre variables y nodos
++ 2.7 Definir campos de Calculo y Comprobacion
+  - [x] Guardar objetivo del calculo
+  - [x] Guardar formula utilizada y version de la formula
+  - [x] Guardar valores sustituidos
+  - [x] Guardar resultado parcial y resultado final
+  - [x] Guardar validacion dimensional
+  - [x] Guardar comprobaciones de cumplimiento y mensajes asociados
+  - [x] Guardar referencia documental que sustenta el metodo aplicado
++ 2.8 Definir campos de Referencia y Reporte
+  - [x] Guardar documento fuente, seccion, pagina y texto contextual
+  - [x] Guardar relacion entre referencia y nodo o calculo asociado
+  - [x] Guardar tipo de uso de la referencia como definicion, criterio, formula o restriccion
+  - [x] Guardar plantilla de reporte utilizada
+  - [x] Guardar contenido exportado, fecha y version de proyecto
++ 2.9 Definir reglas de versionado de datos
+  - [x] Versionar nodos cuando cambie una decision o su justificacion
+  - [x] Versionar calculos cuando cambien entradas, metodo o norma activa
+  - [x] Versionar documentos cuando se actualice el corpus del proyecto
+  - [x] Versionar reportes para poder reconstruir entregables previos
+  - [x] Mantener historial inmutable de decisiones criticas
+
+## 3. Corpus documental autoritativo
++ 3.1 Definir politica de admision de documentos
+  - [x] Aceptar solo documentos aprobados por el usuario
+  - [x] Clasificar documentos por prioridad normativa, tecnica y didactica
+  - [x] Marcar documentos como obligatorios, complementarios o contextuales
+  - [x] Definir reglas para documentos duplicados o de ediciones distintas
+  - [x] Definir reglas para documentos de clase, catalogos y normas oficiales
++ 3.2 Definir pipeline de ingestion documental
+  - [x] Cargar archivo original al repositorio local del proyecto
+  - [x] Extraer texto y metadatos estructurales
+  - [ ] Detectar capitulos, secciones, tablas, figuras y encabezados
+  - [x] Generar fragmentos pequenos y semanticamente utiles
+  - [x] Normalizar encabezados y referencias internas
+  - [x] Guardar indices para busqueda lexical y semantica
++ 3.3 Definir taxonomia documental
+  - [ ] Etiquetar por sistema normativo como AISC, ASCE, Eurocodigo o notas docentes
+  - [x] Etiquetar por tema como cargas, analisis, flexion, compresion, uniones o sismica
+  - [x] Etiquetar por tipo de elemento como viga, columna, placa, correa, union o sistema
+  - [x] Etiquetar por tipo de contenido como definicion, formula, tabla, procedimiento o ejemplo
+  - [x] Etiquetar por nivel de autoridad dentro del proyecto
++ 3.4 Definir estrategia de fragmentacion
+  - [x] Separar definiciones de procedimientos y de ejemplos
+  - [x] Mantener tablas y formulas con su contexto inmediato
+  - [x] Conservar enlaces entre fragmentos consecutivos de una misma seccion
+  - [x] Evitar fragmentos demasiado largos que degraden recuperacion
+  - [x] Evitar fragmentos demasiado pequenos que pierdan significado tecnico
++ 3.5 Definir mecanismo de citas
+  - [x] Construir cita minima con documento, capitulo y pagina
+  - [x] Construir cita expandida con texto contextual del fragmento
+  - [ ] Permitir abrir el documento en el punto citado desde cualquier nodo
+  - [ ] Asociar multiples citas a un mismo calculo cuando aplique
+  - [ ] Marcar citas como primarias o complementarias
++ 3.6 Definir gestion de conflictos documentales
+  - [ ] Detectar cuando una misma regla aparezca en dos ediciones incompatibles
+  - [ ] Detectar cuando una nota docente contradiga una norma oficial activa
+  - [ ] Detectar cuando un documento complementario se use como base de calculo sin permiso
+  - [ ] Elevar alerta al usuario cuando haya conflicto no resuelto
+  - [ ] Bloquear conclusiones automaticas cuando el conflicto sea critico
+
+## 4. Motor de recuperacion documental
++ 4.1 Definir busqueda controlada por contexto de proyecto
+  - [x] Filtrar por normativa activa antes de ejecutar ranking de resultados
+  - [x] Filtrar por documentos autorizados del proyecto
+  - [x] Filtrar por disciplina y tema del nodo actual
+  - [ ] Filtrar por idioma cuando existan fuentes equivalentes
+  - [ ] Filtrar por version o edicion activa del documento
++ 4.2 Definir estrategias de recuperacion
+  - [x] Implementar busqueda lexical exacta para terminos tecnicos y secciones normativas
+  - [ ] Implementar busqueda semantica para conceptos relacionados
+  - [ ] Implementar recuperacion hibrida para mejorar precision y cobertura
+  - [ ] Implementar reranking segun tipo de consulta y tipo de nodo
+  - [ ] Implementar preferencia por fuentes primarias cuando exista conflicto
++ 4.3 Definir tipos de consulta soportados
+  - [ ] Consultas de definicion normativa
+  - [ ] Consultas de seleccion de procedimiento
+  - [ ] Consultas de formula aplicable
+  - [ ] Consultas de restriccion o limitacion
+  - [ ] Consultas de comparacion entre alternativas
+  - [ ] Consultas de ejemplos resueltos relacionados
++ 4.4 Definir salidas del recuperador
+  - [x] Devolver fragmentos ordenados por relevancia y autoridad
+  - [x] Devolver metadatos suficientes para citacion inmediata
+  - [x] Devolver indicador de confianza por resultado
+  - [ ] Devolver sugerencias de articulos relacionados en la wiki
+  - [x] Devolver advertencia cuando no exista base suficiente
++ 4.5 Definir fallbacks y seguridad epistemica
+  - [x] Responder que no existe evidencia suficiente cuando el corpus no soporte la respuesta
+  - [x] Responder que falta documento especifico cuando la ruta de calculo lo requiera
+  - [ ] Evitar que el sistema complete lagunas con memoria del modelo
+  - [ ] Exigir confirmacion del usuario cuando falten datos criticos
+  - [ ] Registrar toda consulta fallida para mejora posterior del corpus
+
+## 5. Arbol de decisiones y calculo
++ 5.1 Definir tipos de nodo operativos
+  - [x] Crear nodo de problema
+  - [x] Crear nodo de decision
+  - [x] Crear nodo de criterio
+  - [x] Crear nodo de alternativa
+  - [x] Crear nodo de hipotesis
+  - [x] Crear nodo de calculo
+  - [x] Crear nodo de comprobacion
+  - [x] Crear nodo documental
+  - [x] Crear nodo didactico
+  - [x] Crear nodo de salida
++ 5.2 Definir estados posibles de rama
+  - [x] Crear estado activa
+  - [x] Crear estado explorada
+  - [x] Crear estado descartada
+  - [x] Crear estado pendiente
+  - [x] Crear estado fallida
+  - [x] Crear estado aprobada
+  - [x] Crear estado archivada
++ 5.3 Definir reglas de expansion del arbol
+  - [x] Expandir una decision en alternativas compatibles con el contexto
+  - [x] Expandir una alternativa en hipotesis, calculos y decisiones hijas
+  - [x] Permitir expansion manual por parte del usuario
+  - [ ] Permitir expansion sugerida por el agente
+  - [ ] Limitar expansion automatica cuando falten datos obligatorios
++ 5.4 Definir reglas de navegacion del arbol
+  - [ ] Permitir seleccionar cualquier nodo para verlo en detalle
+  - [ ] Permitir colapsar subarboles no prioritarios
+  - [ ] Permitir reordenar visualmente ramas hermanas
+  - [ ] Permitir volver al ancestro que origino la decision
+  - [ ] Permitir enfocar solo la rama activa sin perder historial
++ 5.5 Definir reglas de reversion y reactivacion
+  - [x] Permitir reactivar una rama descartada sin perder su historial previo
+  - [x] Permitir clonar una rama aprobada para explorar variante
+  - [ ] Permitir cerrar una rama por incumplimiento tecnico
+  - [ ] Permitir regresar a una decision anterior y elegir alternativa distinta
+  - [ ] Permitir marcar decisiones como provisionales hasta completar verificaciones
++ 5.6 Definir reglas de dependencias internas
+  - [ ] Enlazar hipotesis con calculos que las consumen
+  - [ ] Enlazar calculos con comprobaciones derivadas
+  - [ ] Enlazar comprobaciones fallidas con decisiones que deban reabrirse
+  - [ ] Enlazar nodos documentales con el paso donde se aplican
+  - [ ] Enlazar nodos didacticos con nodos tecnicos del mismo contexto
++ 5.7 Definir reglas de consistencia del arbol
+  - [ ] Impedir nodos huerfanos sin relacion con un problema raiz
+  - [ ] Impedir ramas aprobadas con comprobaciones criticas pendientes
+  - [ ] Impedir que una alternativa se marque aprobada sin evidencia documental base
+  - [ ] Impedir calculos criticos sin fuente normativa o tecnica asociada
+  - [ ] Impedir exportacion final si faltan decisiones bloqueantes
++ 5.8 Definir plantilla inicial de arbol para caso de vigas
+  - [ ] Crear nodo raiz para definir elemento principal entre apoyos
+  - [ ] Crear decision inicial entre celosia, viga alveolar, viga armada, viga laminada y viga de inercia variable
+  - [ ] Crear criterios iniciales de comparacion como peralte, rigidez, peso, fabricacion y montaje
+  - [ ] Crear subramas para predimensionamiento, estabilidad, servicio y uniones
+  - [ ] Crear salidas comparativas por alternativa
+
+## 6. Canvas interactivo
++ 6.1 Definir vistas del canvas
+  - [ ] Crear vista de arbol genealogico del problema
+  - [ ] Crear vista de flujo secuencial de la rama activa
+  - [ ] Crear vista comparativa entre alternativas seleccionadas
+  - [ ] Crear vista tecnica de nodo con calculos y referencias
+  - [ ] Crear vista didactica de nodo con explicacion y glosario
++ 6.2 Definir comportamiento visual del canvas
+  - [ ] Mostrar nodos con color y estilo segun estado
+  - [ ] Mostrar conectores padre hijo entre nodos
+  - [ ] Mostrar iconografia por tipo de nodo sin romper legibilidad tecnica
+  - [ ] Mostrar ramas descartadas colapsadas pero visibles
+  - [ ] Mostrar rama activa como ruta principal destacada
++ 6.3 Definir interacciones del usuario en el canvas
+  - [ ] Abrir detalle de nodo con click simple
+  - [ ] Expandir y colapsar subarboles con accion directa
+  - [ ] Reabrir ramas descartadas desde el propio lienzo
+  - [ ] Clonar ramas desde el nodo de decision correspondiente
+  - [ ] Mover el viewport del canvas sin alterar la estructura de datos
++ 6.4 Definir panel lateral contextual del canvas
+  - [ ] Mostrar descripcion operativa del nodo seleccionado
+  - [ ] Mostrar datos de entrada vinculados al nodo
+  - [ ] Mostrar calculos asociados
+  - [ ] Mostrar referencias documentales asociadas
+  - [ ] Mostrar articulos de wiki relacionados
+  - [ ] Mostrar historial del nodo y cambios recientes
++ 6.5 Definir filtros del canvas
+  - [ ] Filtrar por tipo de nodo
+  - [ ] Filtrar por estado de rama
+  - [ ] Filtrar por fase del proyecto
+  - [ ] Filtrar por calculos pendientes o fallidos
+  - [ ] Filtrar por nodos con documentacion faltante
++ 6.6 Definir persistencia de la vista
+  - [ ] Guardar layout del usuario por proyecto
+  - [ ] Guardar nodos expandidos y colapsados por sesion
+  - [ ] Guardar ultima rama activa visualizada
+  - [ ] Guardar comparaciones abiertas en panel secundario
+  - [ ] Guardar anotaciones visuales permitidas por el usuario
+
+## 7. Chat orientado a tareas
++ 7.1 Definir modos de chat
+  - [ ] Crear modo consultar norma
+  - [ ] Crear modo resolver problema
+  - [ ] Crear modo explicar concepto
+  - [ ] Crear modo comparar alternativas
+  - [ ] Crear modo revisar calculo previo
+  - [ ] Crear modo generar reporte
++ 7.2 Definir reglas de operacion del chat
+  - [ ] Hacer que el chat siempre opere sobre el proyecto activo
+  - [ ] Hacer que el chat pueda leer el nodo actual y su contexto
+  - [ ] Hacer que el chat proponga acciones sobre el arbol en vez de responder solo en texto
+  - [ ] Hacer que el chat cite automaticamente evidencia documental cuando corresponda
+  - [ ] Hacer que el chat pida datos faltantes solo cuando sean estrictamente necesarios
++ 7.3 Definir acciones ejecutables desde el chat
+  - [ ] Crear nuevo nodo o subrama
+  - [ ] Marcar alternativa como seleccionada
+  - [ ] Agregar hipotesis al proyecto
+  - [ ] Lanzar un calculo en el solver
+  - [ ] Abrir comparador de alternativas
+  - [ ] Abrir articulo de wiki relacionado
+  - [ ] Generar resumen tecnico del nodo activo
++ 7.4 Definir guardrails del chat
+  - [ ] Bloquear respuestas fuera del corpus autorizado cuando se trate de sustento tecnico
+  - [ ] Bloquear cierre de calculos criticos si no existe solver asociado
+  - [ ] Bloquear recomendaciones normativas fuera de la normativa activa sin advertencia expresa
+  - [ ] Bloquear alucinaciones mediante respuesta de evidencia insuficiente
+  - [ ] Registrar prompts y acciones relevantes para auditoria tecnica
++ 7.5 Definir adaptacion por perfil de usuario
+  - [ ] Ajustar profundidad explicativa para estudiante
+  - [ ] Ajustar concision para ingeniero en modo produccion
+  - [ ] Ajustar tono y granularidad segun configuracion del proyecto
+  - [ ] Permitir cambio de nivel didactico sin alterar resultados tecnicos
+  - [ ] Permitir mostrar u ocultar razonamiento estructurado de decision
+
+## 8. Motor didactico
++ 8.1 Definir salidas didacticas por nodo
+  - [ ] Generar explicacion de que representa el nodo en el proceso de diseno
+  - [ ] Generar explicacion de por que existe la decision actual
+  - [ ] Generar lista de criterios relevantes para comparar alternativas
+  - [ ] Generar errores frecuentes asociados a esa etapa
+  - [ ] Generar recomendaciones de que revisar antes de avanzar
++ 8.2 Definir niveles didacticos
+  - [ ] Crear nivel basico para conceptos fundamentales
+  - [ ] Crear nivel intermedio para estudiante avanzado
+  - [ ] Crear nivel profesional para uso de oficina
+  - [ ] Crear nivel experto para discutir restricciones y matices avanzados
+  - [ ] Permitir transicion entre niveles desde cualquier nodo
++ 8.3 Definir componentes didacticos enlazables
+  - [ ] Crear glosario contextual por termino tecnico
+  - [ ] Crear esquema de prerrequisitos por tema
+  - [ ] Crear notas de intuicion estructural para cada alternativa importante
+  - [ ] Crear explicaciones visuales de trade offs entre opciones
+  - [ ] Crear preguntas guiadas para autoaprendizaje dentro de la rama activa
++ 8.4 Definir didactica especifica para comparacion de alternativas
+  - [ ] Explicar por que dos alternativas resuelven el mismo problema de forma distinta
+  - [ ] Explicar que criterio cambia cuando el usuario prioriza rigidez, costo o fabricacion
+  - [ ] Explicar consecuencias de descartar una rama demasiado pronto
+  - [ ] Explicar cuando conviene reabrir una alternativa descartada
+  - [ ] Explicar relaciones entre geometria, analisis y detalle constructivo
+
+## 9. Solver determinista y trazabilidad numerica
++ 9.1 Definir arquitectura del solver
+  - [ ] Separar librerias por familia de problema
+  - [ ] Definir interfaz estable entre arbol y solver
+  - [ ] Definir formato estandar de entrada de datos
+  - [ ] Definir formato estandar de salida de resultados
+  - [ ] Definir esquema de errores y advertencias del solver
++ 9.2 Definir familias de calculo del dominio inicial
+  - [ ] Implementar calculo de cargas basicas del elemento
+  - [ ] Implementar combinaciones de carga aplicables al dominio inicial
+  - [ ] Implementar predimensionamiento preliminar de alternativas de viga
+  - [ ] Implementar revision de flexion
+  - [ ] Implementar revision de cortante
+  - [ ] Implementar revision de deflexion
+  - [ ] Implementar revision de estabilidad relevante al dominio inicial
+  - [ ] Implementar chequeos basicos de uniones conceptuales vinculadas
++ 9.3 Definir pipeline de cada calculo
+  - [ ] Validar presencia de datos obligatorios
+  - [ ] Normalizar unidades al sistema objetivo
+  - [ ] Seleccionar metodo permitido segun nodo y normativa activa
+  - [ ] Ejecutar formula o secuencia de formulas
+  - [ ] Registrar resultados parciales y finales
+  - [ ] Emitir comprobacion de cumplimiento
+  - [ ] Vincular salida al nodo correspondiente del arbol
++ 9.4 Definir control dimensional y de consistencia
+  - [ ] Verificar coherencia dimensional de toda formula implementada
+  - [ ] Verificar coherencia entre magnitudes de entrada y salida
+  - [ ] Detectar mezcla de unidades inconsistentes
+  - [ ] Detectar valores fuera de rango razonable
+  - [ ] Bloquear resultado final cuando haya incoherencia critica
++ 9.5 Definir trazabilidad de resultados
+  - [ ] Guardar formula aplicada en formato legible para usuario
+  - [ ] Guardar sustitucion numerica completa
+  - [ ] Guardar fuente de cada dato de entrada
+  - [ ] Guardar referencia documental del metodo utilizado
+  - [ ] Guardar advertencias emitidas durante el calculo
++ 9.6 Definir estrategia de crecimiento del solver
+  - [ ] Diseñar librerias reutilizables para nuevos dominios
+  - [ ] Separar datos normativos de codigo de calculo cuando sea posible
+  - [ ] Preparar framework para agregar compresion, placas y uniones avanzadas
+  - [ ] Preparar framework para agregar laminados en frio y sismica en futuras fases
+  - [ ] Preparar framework para agregar comparacion economica mas adelante
+
+## 10. Comparador de alternativas
++ 10.1 Definir funcion del comparador
+  - [x] Permitir comparar varias ramas hermanas del mismo problema
+  - [x] Permitir comparar rama activa contra rama descartada reabierta
+  - [x] Permitir comparar alternativas conceptuales y alternativas ya calculadas
+  - [ ] Permitir emitir recomendacion condicionada segun criterio priorizado
+  - [x] Permitir guardar comparaciones como evidencia de decision
++ 10.2 Definir criterios base de comparacion
+  - [x] Comparar peralte requerido
+  - [x] Comparar peso estimado o masa relativa
+  - [x] Comparar rigidez o desempeno de servicio
+  - [x] Comparar complejidad de fabricacion
+  - [x] Comparar complejidad de montaje
+  - [x] Comparar sensibilidad a uniones y detalles
+  - [x] Comparar cantidad de verificaciones pendientes
+  - [x] Comparar compatibilidad con restricciones del proyecto
++ 10.3 Definir estructura de resultados del comparador
+  - [x] Generar tabla tecnica por alternativa
+  - [x] Generar resumen cualitativo de ventajas y desventajas
+  - [ ] Generar semaforo de cumplimiento por criterio
+  - [ ] Generar recomendacion condicionada al objetivo seleccionado
+  - [x] Generar enlace directo a cada rama comparada
++ 10.4 Definir uso del comparador en el flujo de trabajo
+  - [ ] Invocar comparador al terminar el primer abanico de opciones
+  - [ ] Invocar comparador antes de cerrar una decision de alto impacto
+  - [ ] Invocar comparador cuando una rama falle una comprobacion importante
+  - [ ] Invocar comparador antes de generar reporte final de seleccion
+  - [ ] Permitir invocacion manual desde chat y desde canvas
+
+## 11. Wiki enlazada de conocimiento
++ 11.1 Definir estructura de la wiki
+  - [ ] Organizar articulos por problemas de ingenieria y no solo por libros o normas
+  - [ ] Crear articulos de sistemas estructurales
+  - [ ] Crear articulos de elementos
+  - [ ] Crear articulos de uniones
+  - [ ] Crear articulos de estabilidad
+  - [ ] Crear articulos de proceso de diseno
+  - [ ] Crear articulos de errores frecuentes y criterios practicos
++ 11.2 Definir plantilla de articulo
+  - [ ] Incluir definicion
+  - [ ] Incluir cuando aplica
+  - [ ] Incluir cuando no aplica
+  - [ ] Incluir datos necesarios
+  - [ ] Incluir pasos de resolucion relacionados
+  - [ ] Incluir formulas y referencias
+  - [ ] Incluir articulos padre e hijo
+  - [ ] Incluir errores frecuentes
++ 11.3 Definir integracion de la wiki con el arbol
+  - [ ] Abrir articulo relacionado desde cualquier nodo
+  - [ ] Mostrar articulos sugeridos segun tipo de decision
+  - [ ] Registrar articulos consultados dentro del historial del problema
+  - [ ] Permitir insertar articulo como nodo didactico dentro de una rama
+  - [ ] Permitir saltar desde articulo a decisiones reales del proyecto
++ 11.4 Definir estrategia de construccion de contenido de wiki
+  - [ ] Derivar contenido base desde el corpus documental autorizado
+  - [ ] Separar contenido normativo de contenido explicativo
+  - [ ] Revisar manualmente articulos de alto impacto tecnico
+  - [ ] Vincular ejemplos resueltos del dominio inicial
+  - [ ] Mantener trazabilidad de origen de cada articulo generado
+
+## 12. Gestion de proyectos, archivos y versiones
++ 12.1 Definir estructura de workspace
+  - [x] Crear contenedor principal de workspace local
+  - [x] Crear carpeta o espacio por proyecto
+  - [x] Crear repositorio documental por proyecto
+  - [ ] Crear base de datos local de proyecto
+  - [x] Crear carpeta de reportes y exportaciones
+  - [x] Crear carpeta de respaldos y snapshots
++ 12.2 Definir ciclo de vida del proyecto
+  - [x] Crear proyecto nuevo con plantilla inicial
+  - [x] Importar documentos y configurar normativa activa
+  - [x] Construir arbol del problema
+  - [x] Ejecutar calculos y comparaciones
+  - [ ] Emitir reporte de avance
+  - [x] Cerrar version del proyecto
+  - [x] Reabrir proyecto para revision o variante
++ 12.3 Definir versionado y snapshots
+  - [x] Crear snapshot al cambiar normativa activa
+  - [x] Crear snapshot antes de una decision mayor
+  - [x] Crear snapshot antes de recalculos masivos
+  - [x] Crear snapshot al emitir reporte formal
+  - [ ] Permitir restauracion de snapshot sin perder historial posterior
++ 12.4 Definir gestion de supuestos del proyecto
+  - [x] Mantener lista global de hipotesis del proyecto
+  - [x] Clasificar hipotesis como confirmadas, provisionales o pendientes
+  - [x] Enlazar hipotesis globales con ramas que las consumen
+  - [ ] Alertar cuando una hipotesis global cambie y afecte calculos previos
+  - [ ] Permitir aprobacion explicita de hipotesis por el usuario
++ 12.5 Definir organizacion de resultados
+  - [ ] Separar resultados preliminares de resultados aprobados
+  - [ ] Guardar comparaciones relevantes como hitos del proyecto
+  - [ ] Guardar arboles archivados para consulta futura
+  - [ ] Guardar exportaciones con sello de version
+  - [ ] Guardar bitacora de cambios y decisiones
+
+## 13. UX y diseno de interfaz
++ 13.1 Definir layout principal de la app
+  - [ ] Reservar area central para canvas
+  - [ ] Reservar panel lateral para detalle del nodo
+  - [ ] Reservar panel secundario para chat
+  - [ ] Reservar acceso rapido a wiki y referencias
+  - [ ] Reservar barra superior para proyecto, version y normativa activa
++ 13.2 Definir pantallas base del sistema
+  - [ ] Pantalla de inicio de workspace
+  - [ ] Pantalla de configuracion de proyecto
+  - [ ] Pantalla de ingestion documental
+  - [ ] Pantalla principal de arbol y canvas
+  - [ ] Pantalla de comparador
+  - [ ] Pantalla de reporte y exportacion
++ 13.3 Definir patrones de interaccion
+  - [ ] Priorizar seleccion directa desde el arbol
+  - [ ] Priorizar accion sobre nodos en lugar de navegacion por menus profundos
+  - [ ] Reducir pasos para reabrir una rama descartada
+  - [ ] Reducir friccion para lanzar comparacion entre alternativas
+  - [ ] Mostrar siempre contexto del nodo dentro del proyecto
++ 13.4 Definir indicadores de estado visibles
+  - [ ] Mostrar normativa activa visible en todo momento
+  - [ ] Mostrar rama activa visible en todo momento
+  - [ ] Mostrar cantidad de comprobaciones pendientes
+  - [ ] Mostrar alertas de conflicto documental
+  - [ ] Mostrar estado de validez de cada rama
++ 13.5 Definir experiencia para dos perfiles de uso
+  - [ ] Crear modo estudiante con mas apoyo didactico visible
+  - [ ] Crear modo profesional con mayor densidad tecnica y menos texto explicativo
+  - [ ] Permitir alternancia rapida entre modos sin perder contexto
+  - [ ] Guardar preferencia por proyecto o por usuario
+  - [ ] Ajustar widgets visibles segun modo seleccionado
+
+## 14. Calidad, validacion y seguridad tecnica
++ 14.1 Definir estrategia de validacion del corpus
+  - [ ] Revisar calidad de OCR o extraccion de texto
+  - [ ] Validar que metadatos de documento sean correctos
+  - [ ] Validar que las citas abran el fragmento correcto
+  - [ ] Validar que tablas y formulas conserven contexto suficiente
+  - [ ] Validar que no existan documentos mal versionados en proyectos activos
++ 14.2 Definir estrategia de pruebas del arbol
+  - [x] Probar creacion de ramas y nodos en escenarios simples
+  - [x] Probar reactivacion de ramas descartadas
+  - [x] Probar clonacion de ramas aprobadas
+  - [x] Probar bloqueo de ramas con datos faltantes
+  - [x] Probar integridad del historial bajo cambios de decision
++ 14.3 Definir estrategia de pruebas del solver
+  - [ ] Comparar resultados contra ejemplos resueltos del corpus cuando existan
+  - [ ] Crear casos de prueba unitarios por formula implementada
+  - [ ] Crear casos limite con valores extremos y errores de unidades
+  - [ ] Verificar mensajes de advertencia y bloqueo
+  - [ ] Verificar reproducibilidad del calculo entre sesiones
++ 14.4 Definir estrategia de pruebas de recuperacion documental
+  - [x] Probar consultas exactas por termino tecnico
+  - [ ] Probar consultas conceptuales por problema
+  - [ ] Probar ranking de resultados bajo normativa activa distinta
+  - [x] Probar deteccion de falta de evidencia
+  - [ ] Probar deteccion de conflictos entre documentos
++ 14.5 Definir estrategia de pruebas UX
+  - [ ] Probar que un usuario pueda cerrar un caso simple sin entrenamiento previo
+  - [ ] Probar que un estudiante entienda el camino de una rama completa
+  - [ ] Probar que un ingeniero pueda volver a una decision previa rapidamente
+  - [ ] Probar legibilidad del canvas con arboles medianos y grandes
+  - [ ] Probar comparador con varias alternativas activas
++ 14.6 Definir seguridad tecnica del producto
+  - [ ] Bloquear eliminacion silenciosa de historial critico
+  - [ ] Proteger integridad de snapshots y versiones
+  - [ ] Registrar acciones de alto impacto como cambio normativo o restauracion
+  - [ ] Evitar sobrescritura de resultados aprobados sin crear nueva version
+  - [ ] Mantener respaldos locales consistentes del proyecto
+
+## 15. MVP ejecutable
++ 15.1 Definir alcance exacto del MVP
+  - [ ] Incluir app local de escritorio
+  - [x] Incluir carga de documentos autorizados
+  - [x] Incluir recuperacion documental con citas
+  - [x] Incluir creacion de proyectos y configuracion de normativa activa
+  - [x] Incluir arbol de decisiones navegable
+  - [ ] Incluir canvas basico con ramas reactivables
+  - [x] Incluir comparador simple de alternativas
+  - [ ] Incluir solver inicial para vigas de claro simple
+  - [ ] Incluir exportacion basica de reporte
++ 15.2 Definir exclusiones del MVP
+  - [x] Excluir modelado estructural 3D general
+  - [x] Excluir integracion BIM o CAD en la primera version
+  - [x] Excluir optimizacion automatica compleja
+  - [x] Excluir costos cuantificados detallados
+  - [x] Excluir generacion automatica de planos de taller
+  - [x] Excluir dominios tecnicos avanzados fuera del caso inicial
++ 15.3 Definir caso demostrador del MVP
+  - [ ] Plantear problema de elemento principal entre columnas con claro de 15 m
+  - [ ] Generar abanico inicial de alternativas estructurales
+  - [ ] Comparar alternativas segun peralte, rigidez y complejidad
+  - [ ] Seleccionar viga alveolar como rama activa de ejemplo
+  - [ ] Expandir subdecisiones de predimensionamiento, verificaciones y uniones
+  - [ ] Reabrir una rama descartada para demostrar iteracion y retorno
++ 15.4 Definir criterios de aceptacion del MVP
+  - [x] El usuario puede crear un proyecto desde cero
+  - [x] El usuario puede consultar el corpus y ver citas correctas
+  - [x] El usuario puede construir y recorrer un arbol con varias ramas
+  - [x] El usuario puede reactivar ramas descartadas sin perder informacion
+  - [ ] El usuario puede ejecutar calculos basicos trazables del dominio inicial
+  - [ ] El usuario puede exportar un reporte coherente del caso demostrador
+
+## 16. Roadmap de implementacion
++ 16.1 Ejecutar fase de definicion funcional
+  - [x] Redactar especificacion funcional completa del producto
+  - [x] Redactar especificacion funcional detallada del arbol
+  - [x] Redactar reglas de negocio del corpus y del solver
+  - [x] Redactar casos de uso primarios y secundarios
+  - [x] Redactar criterios de aceptacion por modulo
++ 16.2 Ejecutar fase de base documental
+  - [x] Implementar repositorio documental local
+  - [x] Implementar pipeline de ingestion y fragmentacion
+  - [x] Implementar taxonomia documental
+  - [ ] Implementar sistema de citas navegables
+  - [ ] Implementar recuperacion hibrida minima viable
++ 16.3 Ejecutar fase de arbol y canvas
+  - [x] Implementar entidades Nodo y Rama
+  - [x] Implementar estados y transiciones de rama
+  - [ ] Implementar canvas navegable basico
+  - [x] Implementar acciones de expandir, colapsar, descartar y reactivar
+  - [ ] Implementar panel lateral contextual
++ 16.4 Ejecutar fase de agente y chat
+  - [ ] Implementar modos de chat
+  - [ ] Implementar lectura del contexto del nodo activo
+  - [ ] Implementar generacion de abanicos de decision
+  - [ ] Implementar acciones de creacion de nodos desde chat
+  - [ ] Implementar guardrails de evidencia insuficiente
++ 16.5 Ejecutar fase de solver y trazabilidad
+  - [ ] Implementar librerias del dominio inicial
+  - [ ] Implementar validador de unidades
+  - [ ] Implementar pipeline de calculo con sustitucion visible
+  - [ ] Implementar comprobaciones y advertencias
+  - [ ] Integrar resultados al arbol
++ 16.6 Ejecutar fase de comparador y wiki
+  - [ ] Implementar comparador de alternativas
+  - [ ] Implementar articulos base de wiki del dominio inicial
+  - [ ] Implementar enlaces entre nodos, articulos y referencias
+  - [ ] Implementar resumen didactico por comparacion
+  - [ ] Implementar navegacion bidireccional entre arbol y wiki
++ 16.7 Ejecutar fase de reportes y cierre
+  - [ ] Implementar plantilla de reporte basico
+  - [ ] Implementar exportacion de proyecto y reporte
+  - [ ] Implementar bitacora de decisiones
+  - [ ] Implementar snapshots de version
+  - [ ] Implementar validacion final del caso demostrador
+
+## 17. Preparacion para escalamiento posterior
++ 17.1 Definir siguientes dominios tecnicos a incorporar
+  - [ ] Preparar incorporacion de columnas
+  - [ ] Preparar incorporacion de uniones detalladas
+  - [ ] Preparar incorporacion de correas y laminados en frio
+  - [ ] Preparar incorporacion de placas base
+  - [ ] Preparar incorporacion de sistemas sismorresistentes
++ 17.2 Definir estrategia de ampliacion del corpus
+  - [ ] Priorizar normas activas y manuales principales
+  - [ ] Priorizar documentos con ejemplos resueltos
+  - [ ] Priorizar catalogos y tablas de propiedades utiles
+  - [ ] Definir proceso controlado de alta de nuevas fuentes
+  - [ ] Definir pruebas de regresion al ampliar corpus
++ 17.3 Definir estrategia de ampliacion funcional
+  - [ ] Preparar comparacion economica cualitativa mas precisa
+  - [ ] Preparar soporte para multiples usuarios o roles en el futuro
+  - [ ] Preparar integracion con hojas de calculo y exportaciones enriquecidas
+  - [ ] Preparar plantillas de problema reutilizables por tipologia
+  - [ ] Preparar libreria de arboles de referencia por familia de problema

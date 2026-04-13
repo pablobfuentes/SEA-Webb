@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Project",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "description",
+    "language",
+    "unit_system",
+    "status",
+    "active_code_context",
+    "ingested_document_ids",
+    "authorized_document_ids",
+    "document_corpus_policy",
+    "root_node_id",
+    "branch_ids",
+    "version_ids",
+    "head_revision_id",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "name": {"type": "string"},
+    "description": {"type": "string"},
+    "status": {"type": "string", "minLength": 1},
+    "language": {"type": "string", "minLength": 1},
+    "unit_system": {"type": "string", "minLength": 1},
+    "active_code_context": { "$ref": "#/$defs/active_code_context" },
+    "ingested_document_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "authorized_document_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "document_corpus_policy": {
+      "type": "string",
+      "enum": ["strict", "approve_also_activates"]
+    },
+    "root_node_id": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "minLength": 1, "pattern": "^[a-z]+_[a-f0-9]{12}$" }
+      ]
+    },
+    "branch_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "pattern": "^[a-z]+_[a-f0-9]{12}$" }
+    },
+    "version_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "pattern": "^[a-z]+_[a-f0-9]{12}$" }
+    },
+    "head_revision_id": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^[a-z]+_[a-f0-9]{12}$" }
+      ]
+    },
+    "created_at": { "type": "string", "minLength": 1 },
+    "updated_at": { "type": "string", "minLength": 1 }
+  },
+  "$defs": {
+    "active_code_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary_standard_family",
+        "active_standard_ids",
+        "complementary_standard_ids",
+        "allowed_document_ids",
+        "conflict_policy"
+      ],
+      "properties": {
+        "primary_standard_family": { "type": "string", "minLength": 1 },
+        "active_standard_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "complementary_standard_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "allowed_document_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "conflict_policy": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+You are working inside the repository `structural_tree_app_foundation`.
+
+Read before implementing:
+- docs/04_block_2_implementation_plan.md
+- docs/implementation/BLOCK_2_STATUS.md
+- docs/01_architecture_v1.md
+- docs/02_master_data_model.md
+- src/structural_tree_app/services/document_service.py
+- current persistence layer
+
+Implement only the local document ingestion milestone.
+
+Primary goal:
+Build a local-only ingestion pipeline that prepares authoritative documents for later retrieval.
+
+Functional requirements:
+- ingest user-approved local documents only
+- register each document with stable metadata such as:
+  - document_id
+  - title
+  - source path
+  - version/edition if known
+  - language
+  - discipline
+  - standard family if known
+  - import timestamp
+- create chunked content units for retrieval later
+- store enough metadata on each chunk to support future citation:
+  - document_id
+  - chunk_id
+  - page or location if available
+  - section/chapter if available
+  - raw text snippet
+- define the ingestion pipeline boundaries clearly:
+  - import
+  - normalize
+  - segment
+  - persist
+- keep implementation local-first and offline
+
+Technical constraints:
+- do not rely on external APIs or cloud vector services
+- keep the pipeline modular so retrieval can use lexical or semantic indexing later
+- if OCR is unavoidable, isolate it as an optional path and keep the default path text-first
+- do not overcomplicate with full semantic indexing yet unless clearly necessary for the milestone
+
+Non-goals:
+- do not yet build the full retrieval engine
+- do not yet connect ingestion deeply into UI
+- do not perform normative reasoning here
+
+Testing requirements:
+- ingest at least one local text-based document successfully
+- verify metadata persistence
+- verify chunk persistence and deterministic IDs if applicable
+- verify duplicate import handling policy
+
+Documentation updates required:
+- update README.md usage if needed
+- update docs/CHANGELOG.md
+- update docs/implementation/BLOCK_2_STATUS.md
+- log failures in docs/FAIL_LOG.md
+
+Stop after this milestone.

@@ -1,0 +1,67 @@
+You are working inside the repository `structural_tree_app_foundation`.
+
+Read before implementing:
+- docs/04_block_2_implementation_plan.md
+- docs/implementation/BLOCK_2_STATUS.md
+- docs/02_master_data_model.md
+- schemas/node.schema.json
+- src/structural_tree_app/domain/enums.py
+- src/structural_tree_app/domain/models.py
+- src/structural_tree_app/services/tree_service.py
+- src/structural_tree_app/services/project_service.py
+- any persistence code added in the prior milestone
+
+Implement only the tree expansion and branch state milestone.
+
+Primary goal:
+Turn the tree into a real persisted domain object with branch lifecycle support.
+
+Functional requirements:
+- support persisted nodes and parent-child relationships
+- support persisted branches as first-class entities if the current model needs them
+- support node types already defined and extend them only if justified
+- support branch/node states such as:
+  - active
+  - explored
+  - discarded
+  - pending
+  - failed
+  - approved
+  - archived
+- support operations such as:
+  - create_root_problem
+  - add_child_node
+  - add_decision_options
+  - activate_branch
+  - discard_branch
+  - reopen_branch
+  - clone_branch
+  - get_subtree
+  - list_branch_paths
+- preserve previously discarded branches so the user can return to them later
+- make node history and timestamps auditable
+
+Important domain rules:
+- the tree is the primary project navigation object
+- branches are not decorative UI constructs; they represent real decision paths
+- discarded branches remain part of project history
+- node state changes must be explicit and recoverable
+
+Non-goals:
+- no UI work
+- no document ingestion
+- no retrieval logic
+- no automatic engineering suggestions yet beyond simple structural helpers if necessary
+
+Testing requirements:
+- test branch creation and reopening
+- test subtree integrity after clone operations
+- test state transitions and invalid transition handling
+- test persistence round-trips
+
+Documentation updates required:
+- update docs/CHANGELOG.md
+- update docs/implementation/BLOCK_2_STATUS.md
+- log any failed attempt in docs/FAIL_LOG.md
+
+Stop after this milestone.

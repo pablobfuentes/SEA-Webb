@@ -1,0 +1,57 @@
+You are working inside the repository `structural_tree_app_foundation`.
+
+First read these files completely before doing anything else:
+- README.md
+- docs/00_product_definition.md
+- docs/01_architecture_v1.md
+- docs/02_master_data_model.md
+- docs/03_mvp_scope.md
+- docs/adr/ADR-001-local-first-architecture.md
+- schemas/project.schema.json
+- schemas/node.schema.json
+- schemas/calculation.schema.json
+- src/structural_tree_app/domain/enums.py
+- src/structural_tree_app/domain/models.py
+- src/structural_tree_app/services/project_service.py
+- src/structural_tree_app/services/tree_service.py
+- src/structural_tree_app/services/document_service.py
+- src/structural_tree_app/storage/json_repository.py
+- src/structural_tree_app/main.py
+- examples/example_project.json
+
+Mission for this step:
+Do NOT implement code yet.
+Draft the implementation plan for Block 2 only.
+
+Block 2 scope:
+- repository workflow and engineering governance
+- project persistence realignment and versioned storage
+- tree expansion, branch state, and node lifecycle
+- local document ingestion pipeline
+- local retrieval with authoritative citations
+- branch comparison v1
+- validation and integration pass
+
+Deliverables for this planning step:
+1. Create `docs/04_block_2_implementation_plan.md`
+2. Create `docs/CHANGELOG.md` if missing
+3. Create `docs/FAIL_LOG.md` if missing
+4. Create `docs/TEST_STRATEGY.md`
+
+Rules:
+- Do not code application features yet
+- Produce a concrete implementation plan with ordered tasks, dependencies, risks, tests, and affected files
+- Respect the existing architecture and local-first ADR
+- The tree is the primary domain object, not the chat
+- Document-first reliability takes priority over convenience
+- Deterministic calculation logic must remain separated from LLM reasoning
+- Any assumption that is not already established in the repo must be marked as an assumption
+
+Plan format requirements:
+- clear ordered checklist by milestone
+- include exact files to create or modify
+- include test intent for each milestone
+- include rollback considerations when relevant
+- include open questions only if truly blocking
+
+At the end, stop. Do not implement code. Summarize what would be executed next, in order.

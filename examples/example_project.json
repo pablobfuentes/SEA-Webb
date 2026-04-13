@@ -1,0 +1,57 @@
+{
+  "project_name": "Proyecto ejemplo - claro simple 15 m",
+  "problem": "Definir elemento principal entre columnas con claro simple de 15 m",
+  "active_standard_family": "AISC",
+  "authorized_documents": [
+    "AISC 341-22 Seismic Provisions for Structural Steel Buildings.pdf",
+    "Diseño de estructuras de acero (Jack C. McCormac).pdf",
+    "TOMO16c.pdf",
+    "TOMO13c.pdf"
+  ],
+  "initial_alternatives": [
+    {
+      "title": "Celosía",
+      "pros": [
+        "Alta eficiencia para claros largos",
+        "Reducción de peso respecto a soluciones macizas"
+      ],
+      "cons": [
+        "Mayor complejidad de fabricación",
+        "Mayor número de nodos y detalles"
+      ]
+    },
+    {
+      "title": "Viga alveolar",
+      "pros": [
+        "Mejora la rigidez con incremento eficiente de peralte",
+        "Puede facilitar paso de instalaciones"
+      ],
+      "cons": [
+        "Requiere revisiones locales adicionales",
+        "Fabricación menos estándar"
+      ]
+    },
+    {
+      "title": "Viga armada de alma llena",
+      "pros": [
+        "Gran flexibilidad geométrica",
+        "Control más directo del peralte y espesor"
+      ],
+      "cons": [
+        "Mayor fabricación en taller",
+        "Costo potencialmente superior"
+      ]
+    },
+    {
+      "title": "Viga laminada convencional",
+      "pros": [
+        "Disponibilidad alta",
+        "Fabricación y montaje más simples"
+      ],
+      "cons": [
+        "Puede quedar limitada por peralte o peso",
+        "Menor flexibilidad de ajuste geométrico"
+      ]
+    }
+  ]
+}

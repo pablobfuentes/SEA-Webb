@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DocumentFragment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "document_id",
+    "chapter",
+    "section",
+    "page_start",
+    "page_end",
+    "fragment_type",
+    "topic_tags",
+    "authority_level",
+    "text",
+    "chunk_index",
+    "char_start",
+    "char_end",
+    "fragment_content_hash",
+    "material_content_hash",
+    "ingestion_method",
+    "document_approval_status",
+    "document_normative_classification",
+    "sibling_fragment_ids",
+    "linked_fragment_ids"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "document_id": {
+      "type": "string",
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "chapter": { "type": "string" },
+    "section": { "type": "string" },
+    "page_start": { "oneOf": [{ "type": "null" }, { "type": "integer" }] },
+    "page_end": { "oneOf": [{ "type": "null" }, { "type": "integer" }] },
+    "fragment_type": { "type": "string" },
+    "topic_tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "authority_level": {
+      "type": "string",
+      "enum": ["primary", "complementary", "contextual"]
+    },
+    "text": { "type": "string" },
+    "chunk_index": { "type": "integer", "minimum": 0 },
+    "char_start": { "oneOf": [{ "type": "null" }, { "type": "integer" }] },
+    "char_end": { "oneOf": [{ "type": "null" }, { "type": "integer" }] },
+    "fragment_content_hash": { "type": "string", "minLength": 32 },
+    "material_content_hash": { "type": "string", "minLength": 0 },
+    "ingestion_method": { "type": "string", "minLength": 1 },
+    "document_approval_status": {
+      "type": "string",
+      "enum": ["pending", "approved", "rejected"]
+    },
+    "document_normative_classification": {
+      "type": "string",
+      "enum": ["unknown", "primary_standard", "supporting_document", "reference_document"]
+    },
+    "sibling_fragment_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "linked_fragment_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

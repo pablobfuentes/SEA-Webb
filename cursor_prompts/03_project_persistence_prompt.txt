@@ -1,0 +1,63 @@
+You are working inside the repository `structural_tree_app_foundation`.
+
+Read before implementing:
+- docs/04_block_2_implementation_plan.md
+- docs/implementation/BLOCK_2_STATUS.md
+- docs/02_master_data_model.md
+- schemas/project.schema.json
+- schemas/node.schema.json
+- src/structural_tree_app/domain/models.py
+- src/structural_tree_app/services/project_service.py
+- src/structural_tree_app/storage/json_repository.py
+- examples/example_project.json
+
+Implement only the project persistence milestone.
+
+Primary goal:
+Create reliable local project persistence with explicit versioning and storage boundaries.
+
+Functional requirements:
+- persist projects to local disk in a controlled structure
+- persist project metadata, assumptions, active standards, and revision information
+- support create, load, save, and save-as-new-revision operations
+- keep project identity separate from revision identity
+- prepare the system so tree data can be saved in the same project boundary later
+- preserve local-first architecture
+
+Suggested implementation direction:
+- define a project workspace structure such as:
+  - workspace/
+    - project_id/
+      - project.json
+      - revisions/
+      - tree/
+      - documents/
+      - exports/
+- add revision metadata model if missing
+- add repository/service methods for:
+  - create_project
+  - load_project
+  - save_project
+  - create_revision
+  - list_revisions
+- keep the persistence adapter simple and file-based for now
+- add schema validation at save/load boundaries where reasonable
+
+Non-goals:
+- do not implement document ingestion yet
+- do not implement retrieval yet
+- do not implement branch comparison yet
+
+Testing requirements:
+- add tests for create/load/save/revision flows
+- verify example project can be migrated or loaded cleanly
+- verify bad payloads fail safely
+- verify round-trip persistence preserves key fields
+
+Documentation updates required:
+- update README.md if usage changes
+- update docs/CHANGELOG.md
+- update docs/implementation/BLOCK_2_STATUS.md
+- write to docs/FAIL_LOG.md if anything fails or is deferred
+
+Stop after completing this milestone.

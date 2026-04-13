@@ -1,0 +1,55 @@
+You are working inside the repository `structural_tree_app_foundation`.
+
+Read before implementing:
+- docs/04_block_2_implementation_plan.md
+- docs/implementation/BLOCK_2_STATUS.md
+- docs/01_architecture_v1.md
+- docs/02_master_data_model.md
+- tree persistence/state code
+- any retrieval or calculation metadata currently available
+
+Implement only branch comparison v1.
+
+Primary goal:
+Allow two or more branches to be compared as decision alternatives inside the project domain.
+
+Functional requirements:
+- allow selecting multiple branches for comparison
+- produce a structured comparison object
+- support comparison fields that are meaningful even before full solver maturity, such as:
+  - branch title
+  - current state
+  - unresolved blockers
+  - assumptions count
+  - calculations count
+  - pending checks count
+  - associated citations count
+  - qualitative advantages
+  - qualitative disadvantages
+- if available in the current domain, include placeholders or actual values for:
+  - estimated depth or height
+  - estimated weight category
+  - fabrication complexity category
+  - erection complexity category
+- make it easy to extend later with deterministic numerical comparisons
+
+Important domain rules:
+- comparison is a domain service, not just a UI table
+- discarded branches may still be compared
+- comparison must not mutate branches
+
+Non-goals:
+- no UI implementation beyond minimal serialization or CLI demonstration if useful
+- no full optimization engine
+
+Testing requirements:
+- compare at least two branches from a seeded project
+- verify comparison output is stable and serializable
+- verify missing metrics are handled safely
+
+Documentation updates required:
+- update docs/CHANGELOG.md
+- update docs/implementation/BLOCK_2_STATUS.md
+- log any issue in docs/FAIL_LOG.md
+
+Stop after this milestone.

@@ -1,0 +1,3 @@
+# Dependencias mínimas de esta base
+jsonschema>=4.22
+pypdf>=4.0

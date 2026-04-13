@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RevisionMetadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "project_id", "created_at", "rationale", "parent_revision_id"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "created_at": { "type": "string", "minLength": 1 },
+    "rationale": { "type": "string" },
+    "parent_revision_id": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^[a-z]+_[a-f0-9]{12}$" }
+      ]
+    }
+  }
+}

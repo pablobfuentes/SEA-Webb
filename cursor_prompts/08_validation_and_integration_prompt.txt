@@ -1,0 +1,36 @@
+You are working inside the repository `structural_tree_app_foundation`.
+
+Read before implementing:
+- docs/04_block_2_implementation_plan.md
+- docs/implementation/BLOCK_2_STATUS.md
+- docs/TEST_STRATEGY.md
+- all code and docs produced during Block 2
+
+Implement only the validation and integration pass for Block 2.
+
+Primary goal:
+Verify that the Block 2 milestones work together coherently and are ready for the next phase.
+
+Validation scope:
+- project create/load/save/revision
+- persisted tree lifecycle
+- document ingestion
+- retrieval with citation payloads
+- branch comparison v1
+- example project flow exercising the domain in sequence
+
+Required outputs:
+1. Add or update tests needed for integrated flow coverage
+2. Create `docs/05_block_2_validation_report.md`
+3. Update README.md with a realistic Block 2 usage walkthrough
+4. Update docs/implementation/BLOCK_2_STATUS.md to mark milestone completion states
+5. Update docs/CHANGELOG.md
+6. Log anything unresolved in docs/FAIL_LOG.md
+
+Validation rules:
+- prefer end-to-end local validation using the current repo artifacts
+- document what is validated and what remains provisional
+- do not start Block 3 or UI work
+- if you find design flaws, document them and apply only contained fixes relevant to Block 2
+
+Stop after the validation report is complete.

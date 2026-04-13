@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Calculation",
+  "type": "object",
+  "required": [
+    "id",
+    "project_id",
+    "node_id",
+    "objective",
+    "method_label",
+    "formula_text",
+    "inputs",
+    "substitutions",
+    "result",
+    "status",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "id": {"type": "string"},
+    "project_id": {"type": "string"},
+    "node_id": {"type": "string"},
+    "objective": {"type": "string"},
+    "method_label": {"type": "string"},
+    "formula_id": {"type": ["string", "null"]},
+    "formula_text": {"type": "string"},
+    "inputs": {"type": "object"},
+    "substitutions": {"type": "object"},
+    "result": {"type": "object"},
+    "dimensional_validation": {"type": ["object", "null"]},
+    "reference_ids": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "status": {"type": "string"},
+    "created_at": {"type": "string"},
+    "updated_at": {"type": "string"}
+  }
+}

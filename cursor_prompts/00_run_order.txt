@@ -1,0 +1,8 @@
+1. 01_block_2_planning_prompt.txt
+2. 02_repo_workflow_and_governance_prompt.txt
+3. 03_project_persistence_prompt.txt
+4. 04_tree_expansion_and_state_prompt.txt
+5. 05_document_ingestion_prompt.txt
+6. 06_document_retrieval_and_citation_prompt.txt
+7. 07_branch_comparison_v1_prompt.txt
+8. 08_validation_and_integration_prompt.txt

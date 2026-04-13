@@ -1,0 +1,56 @@
+You are working inside the repository `structural_tree_app_foundation`.
+
+Read before implementing:
+- docs/04_block_2_implementation_plan.md
+- docs/implementation/BLOCK_2_STATUS.md
+- docs/00_product_definition.md
+- docs/01_architecture_v1.md
+- docs/02_master_data_model.md
+- document ingestion code and persisted data structures
+- src/structural_tree_app/services/document_service.py
+
+Implement only the local document retrieval and citation milestone.
+
+Primary goal:
+Enable authoritative retrieval from the approved local corpus, with explicit citation objects.
+
+Functional requirements:
+- search only within the locally ingested approved corpus
+- support at least a lexical search path first
+- optionally add a simple semantic retrieval path only if it remains fully local and maintainable
+- allow filtering by:
+  - active project standard family
+  - language
+  - document_id
+  - topic or tag if available
+- return ranked results with explicit citation payloads
+- define a citation object that can later be shown in UI and reports, including at minimum:
+  - document title
+  - document_id
+  - chunk_id
+  - page/location if available
+  - quoted snippet or supporting excerpt
+- provide a service method for no-evidence cases that returns a safe structured response instead of fabricated certainty
+
+Critical reliability rules:
+- no answer object should imply authority without a citation payload
+- if the corpus is insufficient, the system must say so structurally
+- retrieval must not silently mix inactive standards if the project restricts them
+
+Non-goals:
+- no LLM reasoning layer
+- no UI chat implementation
+- no branch comparison yet
+
+Testing requirements:
+- test successful retrieval from ingested content
+- test filtered retrieval by document_id or standard family
+- test insufficient-evidence response
+- test citation object completeness
+
+Documentation updates required:
+- update docs/CHANGELOG.md
+- update docs/implementation/BLOCK_2_STATUS.md
+- update FAIL_LOG if needed
+
+Stop after this milestone.

@@ -1,0 +1,47 @@
+You are working inside the repository `structural_tree_app_foundation`.
+
+Before coding, read:
+- docs/04_block_2_implementation_plan.md
+- docs/CHANGELOG.md
+- docs/FAIL_LOG.md
+- docs/TEST_STRATEGY.md
+- README.md
+- docs/00_product_definition.md
+- docs/01_architecture_v1.md
+- docs/02_master_data_model.md
+- docs/03_mvp_scope.md
+- docs/adr/ADR-001-local-first-architecture.md
+
+Implement only the repository workflow and governance foundations required for Block 2.
+
+Goals:
+- establish predictable development workflow inside the repo
+- add minimal but real engineering discipline artifacts
+- make future feature work auditable
+
+Implement:
+1. Create a `docs/implementation/` folder if missing
+2. Create a `docs/implementation/BLOCK_2_STATUS.md` status tracker
+3. Add or update a root-level `.gitignore` appropriate for Python local-first development
+4. Add a root-level `pyproject.toml` if missing, with minimal project metadata and tooling placeholders only if needed for the existing structure
+5. Add a root-level `Makefile` or simple task runner file only if it adds clear value for running tests and local checks
+6. Add a root-level `CONTRIBUTING.md` with repo-specific engineering workflow rules
+7. Update `README.md` so that the execution flow for Block 2 is clear
+
+Rules:
+- Keep this step small and infrastructural
+- Do not implement persistence, ingestion, retrieval, or comparison logic yet
+- Prefer minimalism over toolchain complexity
+- Do not introduce external services or cloud dependencies
+- Keep everything aligned with a local-first desktop-oriented system
+
+Testing requirements:
+- validate that the repo still imports cleanly
+- validate that any task runner commands referenced actually work
+- document what was validated in `docs/CHANGELOG.md`
+- log any issue or failed attempt in `docs/FAIL_LOG.md`
+
+When done:
+- update `docs/implementation/BLOCK_2_STATUS.md`
+- update `docs/CHANGELOG.md`
+- stop

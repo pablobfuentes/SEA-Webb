@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Alternative",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "decision_id",
+    "title",
+    "description",
+    "pros",
+    "cons",
+    "constraints",
+    "next_expected_decisions",
+    "status",
+    "reactivatable"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "decision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "pros": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "cons": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "next_expected_decisions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "status": { "type": "string", "minLength": 1 },
+    "reactivatable": { "type": "boolean" }
+  }
+}
