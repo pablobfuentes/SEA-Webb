@@ -6,6 +6,7 @@ from typing import Any, Literal
 from structural_tree_app.domain.enums import BranchState, NodeState, NodeType
 from structural_tree_app.domain.models import Project, utc_now
 from structural_tree_app.services.project_service import ProjectService
+from structural_tree_app.services.simple_span_m5_service import METHOD_LABEL as M5_METHOD_LABEL
 from structural_tree_app.services.tree_workspace import TreeWorkspace
 from structural_tree_app.storage.tree_store import TreeStore
 
@@ -20,6 +21,14 @@ CriterionProvenance = Literal[
     "computed",
     "derived_from_tree",
     "manual_tag",
+    "document_trace_pending",
+    "deterministic_preliminary",
+]
+
+ComparisonFieldSource = Literal[
+    "m5_deterministic_preliminary",
+    "branch_tree_derived",
+    "manual_placeholder",
     "document_trace_pending",
 ]
 
@@ -63,6 +72,16 @@ class BranchComparisonRow:
     estimated_weight_category: str | None = None
     fabrication_complexity_category: str | None = None
     erection_complexity_category: str | None = None
+    m5_preliminary: dict[str, Any] | None = None
+    m5_checks_via_calculation_id: list[dict[str, Any]] = field(default_factory=list)
+    comparison_field_sources: dict[str, ComparisonFieldSource] = field(default_factory=dict)
+    """
+    Explicit source classification used by M6 output:
+    - m5_deterministic_preliminary
+    - branch_tree_derived
+    - manual_placeholder
+    - document_trace_pending
+    """
     metric_provenance: dict[str, CriterionProvenance] = field(default_factory=dict)
     """
     Origin of each metric for this row (deterministic keys, sorted in ``to_dict`` output).
@@ -132,7 +151,59 @@ def _build_metric_provenance(
     p["estimated_weight_category"] = tag_prov
     p["fabrication_complexity_category"] = tag_prov
     p["erection_complexity_category"] = tag_prov
+    p["m5_preliminary"] = "deterministic_preliminary"
+    p["m5_checks_via_calculation_id"] = "deterministic_preliminary"
     return dict(sorted(p.items()))
+
+
+def _build_comparison_field_sources(
+    *,
+    has_manual_placeholders: bool,
+) -> dict[str, ComparisonFieldSource]:
+    placeholder_source: ComparisonFieldSource = (
+        "manual_placeholder" if has_manual_placeholders else "branch_tree_derived"
+    )
+    out: dict[str, ComparisonFieldSource] = {
+        "m5_preliminary": "m5_deterministic_preliminary",
+        "m5_checks_via_calculation_id": "m5_deterministic_preliminary",
+        "title": "branch_tree_derived",
+        "state": "branch_tree_derived",
+        "unresolved_blockers": "branch_tree_derived",
+        "assumptions_count": "branch_tree_derived",
+        "calculations_count": "branch_tree_derived",
+        "pending_checks_count": "branch_tree_derived",
+        "qualitative_advantages": "branch_tree_derived",
+        "qualitative_disadvantages": "branch_tree_derived",
+        "max_subtree_depth": "branch_tree_derived",
+        "node_count": "branch_tree_derived",
+        "reference_ids": "document_trace_pending",
+        "citation_traces": "document_trace_pending",
+        "linked_reference_ids_count": "document_trace_pending",
+        "estimated_depth_or_height": placeholder_source,
+        "estimated_weight_category": placeholder_source,
+        "fabrication_complexity_category": placeholder_source,
+        "erection_complexity_category": placeholder_source,
+    }
+    return dict(sorted(out.items()))
+
+
+def _compact_m5_result(result: dict[str, Any], *, method_label: str) -> dict[str, Any]:
+    return {
+        "classification": "preliminary_workflow_signal",
+        "method_label": method_label,
+        "disclaimer": result.get("disclaimer"),
+        "deterministic_signals": {
+            "nominal_depth_demand_m": result.get("nominal_depth_demand_m"),
+            "nominal_depth_ratio_of_span": result.get("nominal_depth_ratio_of_span"),
+            "fabrication_complexity_rank": result.get("fabrication_complexity_rank"),
+            "fabrication_complexity_label": result.get("fabrication_complexity_label"),
+            "lightweight_fit": result.get("lightweight_fit"),
+            "fabrication_simplicity_alignment_score": result.get("fabrication_simplicity_alignment_score"),
+            "fabrication_simplicity_alignment_reason": result.get("fabrication_simplicity_alignment_reason"),
+        },
+        "authority": result.get("authority", {}),
+        "inputs_echo": result.get("inputs_echo", {}),
+    }
 
 
 class BranchComparisonService:
@@ -222,13 +293,25 @@ class BranchComparisonService:
         nodes = [n for n in self.store.load_all_nodes() if n.branch_id == branch_id]
         nodes.sort(key=lambda n: n.id)
         by_id = {n.id: n for n in nodes}
+        node_ids = {n.id for n in nodes}
         blockers = sorted(n.title for n in nodes if n.state == NodeState.BLOCKED)
+        calc_ids = []
+        for cid in sorted(self.store.list_calculation_ids()):
+            calc = self.store.load_calculation(cid)
+            if calc.node_id in node_ids:
+                calc_ids.append(calc.id)
+        calculations_count = len(calc_ids)
+
+        checks_for_branch = []
+        for ckid in sorted(self.store.list_check_ids()):
+            chk = self.store.load_check(ckid)
+            if chk.node_id in node_ids or chk.calculation_id in calc_ids:
+                checks_for_branch.append(chk)
         pending_checks = sum(
-            1 for n in nodes if n.node_type == NodeType.CHECK and n.state != NodeState.COMPLETE
+            1
+            for c in checks_for_branch
+            if str(c.status).lower() in {"pending", "pending_inputs", "open", "todo"}
         )
-        calc_nodes = sum(1 for n in nodes if n.node_type == NodeType.CALCULATION)
-        linked_calcs = sum(len(n.linked_calculation_ids) for n in nodes)
-        calculations_count = calc_nodes + linked_calcs
 
         ref_ids: list[str] = []
         for n in nodes:
@@ -239,7 +322,6 @@ class BranchComparisonService:
         ]
 
         assumptions = self._load_assumptions()
-        node_ids = {n.id for n in nodes}
         assumptions_count = sum(1 for a in assumptions if a.node_id in node_ids)
 
         advantages, disadvantages = self._aggregate_alternative_pros_cons(branch_id, by_id)
@@ -250,6 +332,34 @@ class BranchComparisonService:
         est_depth, weight, fab, erection = self._placeholders_from_tags(branch.comparison_tags)
         has_manual = any(x is not None for x in (est_depth, weight, fab, erection))
         provenance = _build_metric_provenance(has_manual_placeholders=has_manual)
+        field_sources = _build_comparison_field_sources(has_manual_placeholders=has_manual)
+
+        m5_calc_ids = []
+        for cid in calc_ids:
+            c = self.store.load_calculation(cid)
+            if c.method_label == M5_METHOD_LABEL:
+                m5_calc_ids.append(cid)
+        m5_calc_ids = sorted(m5_calc_ids)
+
+        m5_preliminary = None
+        if m5_calc_ids:
+            selected = self.store.load_calculation(m5_calc_ids[-1])
+            m5_preliminary = _compact_m5_result(selected.result, method_label=selected.method_label)
+
+        m5_checks: list[dict[str, Any]] = []
+        for chk in sorted(checks_for_branch, key=lambda c: (c.check_type, c.id)):
+            if chk.calculation_id not in m5_calc_ids:
+                continue
+            m5_checks.append(
+                {
+                    "check_id": chk.id,
+                    "check_type": chk.check_type,
+                    "status": chk.status,
+                    "message": chk.message,
+                    "utilization_ratio": chk.utilization_ratio,
+                    "disclaimer": "preliminary_workflow_signal",
+                }
+            )
 
         return BranchComparisonRow(
             branch_id=branch.id,
@@ -270,6 +380,9 @@ class BranchComparisonService:
             estimated_weight_category=weight,
             fabrication_complexity_category=fab,
             erection_complexity_category=erection,
+            m5_preliminary=m5_preliminary,
+            m5_checks_via_calculation_id=m5_checks,
+            comparison_field_sources=field_sources,
             metric_provenance=provenance,
         )
 

@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Calculation",
   "type": "object",
+  "additionalProperties": false,
   "required": [
     "id",
     "project_id",
@@ -14,26 +15,36 @@
     "result",
     "status",
     "created_at",
-    "updated_at"
+    "updated_at",
+    "reference_ids"
   ],
   "properties": {
-    "id": {"type": "string"},
-    "project_id": {"type": "string"},
-    "node_id": {"type": "string"},
-    "objective": {"type": "string"},
-    "method_label": {"type": "string"},
-    "formula_id": {"type": ["string", "null"]},
-    "formula_text": {"type": "string"},
-    "inputs": {"type": "object"},
-    "substitutions": {"type": "object"},
-    "result": {"type": "object"},
-    "dimensional_validation": {"type": ["object", "null"]},
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "node_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "objective": { "type": "string" },
+    "method_label": { "type": "string" },
+    "formula_id": { "type": ["string", "null"] },
+    "formula_text": { "type": "string" },
+    "inputs": { "type": "object" },
+    "substitutions": { "type": "object" },
+    "result": { "type": "object" },
+    "dimensional_validation": { "type": ["object", "null"] },
     "reference_ids": {
       "type": "array",
-      "items": {"type": "string"}
+      "items": { "type": "string" }
     },
-    "status": {"type": "string"},
-    "created_at": {"type": "string"},
-    "updated_at": {"type": "string"}
+    "status": { "type": "string" },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
   }
 }

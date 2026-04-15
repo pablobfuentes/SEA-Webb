@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Check",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "project_id",
+    "node_id",
+    "calculation_id",
+    "check_type",
+    "demand",
+    "capacity",
+    "utilization_ratio",
+    "status",
+    "message",
+    "reference_ids"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "node_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "calculation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "check_type": { "type": "string", "minLength": 1 },
+    "demand": { "type": "object" },
+    "capacity": { "type": "object" },
+    "utilization_ratio": { "type": "number" },
+    "status": { "type": "string", "minLength": 1 },
+    "message": { "type": "string" },
+    "reference_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

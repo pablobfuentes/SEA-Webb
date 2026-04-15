@@ -1,5 +1,6 @@
 Project: Structural Engineering App
 Leyenda: [x] = cubierto o verificado en structural_tree_app_foundation (documentacion PBS en docs/ y nucleo Block 2). [ ] = pendiente o fuera del alcance actual del foundation.
+Seguimiento Block 3 (viga acero, claro simple): §18.
 
 
 ## 0. Definicion del producto y reglas rectoras
@@ -272,8 +273,8 @@ Leyenda: [x] = cubierto o verificado en structural_tree_app_foundation (document
   - [ ] Impedir calculos criticos sin fuente normativa o tecnica asociada
   - [ ] Impedir exportacion final si faltan decisiones bloqueantes
 + 5.8 Definir plantilla inicial de arbol para caso de vigas
-  - [ ] Crear nodo raiz para definir elemento principal entre apoyos
-  - [ ] Crear decision inicial entre celosia, viga alveolar, viga armada, viga laminada y viga de inercia variable
+  - [x] Crear nodo raiz para definir elemento principal entre apoyos
+  - [x] Crear decision inicial entre celosia, viga alveolar, viga armada, viga laminada y viga de inercia variable
   - [ ] Crear criterios iniciales de comparacion como peralte, rigidez, peso, fabricacion y montaje
   - [ ] Crear subramas para predimensionamiento, estabilidad, servicio y uniones
   - [ ] Crear salidas comparativas por alternativa
@@ -607,7 +608,7 @@ Leyenda: [x] = cubierto o verificado en structural_tree_app_foundation (document
   - [x] Excluir dominios tecnicos avanzados fuera del caso inicial
 + 15.3 Definir caso demostrador del MVP
   - [ ] Plantear problema de elemento principal entre columnas con claro de 15 m
-  - [ ] Generar abanico inicial de alternativas estructurales
+  - [x] Generar abanico inicial de alternativas estructurales
   - [ ] Comparar alternativas segun peralte, rigidez y complejidad
   - [ ] Seleccionar viga alveolar como rama activa de ejemplo
   - [ ] Expandir subdecisiones de predimensionamiento, verificaciones y uniones
@@ -683,3 +684,20 @@ Leyenda: [x] = cubierto o verificado en structural_tree_app_foundation (document
   - [ ] Preparar integracion con hojas de calculo y exportaciones enriquecidas
   - [ ] Preparar plantillas de problema reutilizables por tipologia
   - [ ] Preparar libreria de arboles de referencia por familia de problema
+
+## 18. Block 3 — Workflow fundacional (viga acero, claro simple)
++ 18.1 Persistencia y arbol (M3 / M3.1)
+  - [x] Flujo simple-span: problema raiz, decision y alternativas persistidas en `structural_tree_app_foundation`
+  - [x] Catalogo de alternativas elegibles y ranking heuristico v1 (sugerencia top-3; no es idoneidad de diseño)
+  - [x] Metadatos de sugerencia en `Alternative` y `origin_alternative_id` en `Branch` cuando aplica
++ 18.2 Caracterizacion cualitativa con provenencia (M4)
+  - [x] Items estructurados `characterization_items` con provenencia: retrieval respaldado en corpus, heuristica de flujo, marcador manual, o sin evidencia aun
+  - [x] Consultas de recuperacion lexical contra corpus normativo activo primario; persistencia de `Reference` cuando hay hit
+  - [x] Validacion de integridad: `reference_id` exige archivo de referencia para items retrieval_backed
++ 18.3 Seleccion de alternativa y rama de trabajo
+  - [x] Alternativas ligeras bajo la decision hasta seleccion; materializacion de rama de trabajo dedicada al elegir (`materialize_working_branch_for_alternative`)
+  - [x] Clonacion de rama conserva `characterization_items` y mapea `origin_alternative_id`
++ 18.4 Fuera de este bloque en foundation
+  - [ ] Calculos deterministicos de comprobacion (M5)
+  - [ ] Enriquecimiento comparativo de ramas (M6)
+  - [ ] Flujo vertical E2E completo de producto (M7)

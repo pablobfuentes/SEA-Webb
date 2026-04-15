@@ -63,7 +63,7 @@ class ProjectService:
         root = self._project_dir(project_id)
         for sub in ("revisions", "tree", "documents", "exports"):
             (root / sub).mkdir(parents=True, exist_ok=True)
-        for sub in ("branches", "nodes", "decisions", "alternatives"):
+        for sub in ("branches", "nodes", "decisions", "alternatives", "calculations", "checks", "references"):
             (root / "tree" / sub).mkdir(parents=True, exist_ok=True)
 
     def create_project(

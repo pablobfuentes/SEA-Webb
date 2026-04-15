@@ -176,21 +176,6 @@ class TreeWorkspace:
                 return None
             return old_to_new.get(oid)
 
-        new_branch = Branch(
-            project_id=self.project.id,
-            title=title or f"{src.title} (copy)",
-            description=src.description,
-            origin_decision_node_id=map_node_id(src.origin_decision_node_id),
-            root_node_id=new_root_new,
-            state=BranchState.PENDING,
-            parent_branch_id=src.parent_branch_id,
-            cloned_from_branch_id=source_branch_id,
-            reactivated_from_branch_id=None,
-            comparison_tags=list(src.comparison_tags),
-            id=new_branch_id,
-        )
-        new_branch = self._touch_branch(new_branch)
-
         old_decision_nodes = {d.decision_node_id: d for d in self._load_decisions_for_nodes(set(by_id))}
         old_to_new_dec: dict[str, str] = {}
         for dec in old_decision_nodes.values():
@@ -200,6 +185,27 @@ class TreeWorkspace:
         for dec in old_decision_nodes.values():
             for aid in dec.alternative_ids:
                 old_to_new_alt[aid] = new_id("alt")
+
+        mapped_origin_alt = (
+            old_to_new_alt[src.origin_alternative_id]
+            if getattr(src, "origin_alternative_id", None) and src.origin_alternative_id in old_to_new_alt
+            else None
+        )
+        new_branch = Branch(
+            project_id=self.project.id,
+            title=title or f"{src.title} (copy)",
+            description=src.description,
+            origin_decision_node_id=map_node_id(src.origin_decision_node_id),
+            origin_alternative_id=mapped_origin_alt,
+            root_node_id=new_root_new,
+            state=BranchState.PENDING,
+            parent_branch_id=src.parent_branch_id,
+            cloned_from_branch_id=source_branch_id,
+            reactivated_from_branch_id=None,
+            comparison_tags=list(src.comparison_tags),
+            id=new_branch_id,
+        )
+        new_branch = self._touch_branch(new_branch)
 
         for n in sorted(nodes, key=lambda x: x.depth):
             oid = n.id
@@ -256,10 +262,16 @@ class TreeWorkspace:
                     decision_id=new_dec_id,
                     title=alt.title,
                     description=alt.description,
+                    catalog_key=alt.catalog_key,
+                    characterization_items=[dict(x) for x in alt.characterization_items],
                     pros=list(alt.pros),
                     cons=list(alt.cons),
                     constraints=list(alt.constraints),
                     next_expected_decisions=list(alt.next_expected_decisions),
+                    suggested=alt.suggested,
+                    suggestion_rank=alt.suggestion_rank,
+                    suggestion_score=alt.suggestion_score,
+                    suggestion_provenance=alt.suggestion_provenance,
                     status=alt.status,
                     reactivatable=alt.reactivatable,
                     id=new_alt_id,
@@ -319,6 +331,67 @@ class TreeWorkspace:
 
         walk(root, [])
         return paths
+
+    def materialize_working_branch_for_alternative(
+        self,
+        trunk_branch_id: str,
+        alternative_id: str,
+        *,
+        activate: bool = True,
+    ) -> tuple[Branch, Node]:
+        """
+        Create a new branch for the chosen alternative: lightweight siblings stay on the trunk;
+        the working path is a separate branch with origin metadata. M4 scaffold only (no M5 calcs).
+        """
+        alt = self.store.load_alternative(alternative_id)
+        dec = self.store.load_decision(alt.decision_id)
+        dnode = self.store.load_node(dec.decision_node_id)
+        if dnode.branch_id != trunk_branch_id:
+            raise TreeWorkspaceError("Decision does not belong to the specified trunk branch")
+        trunk = self.store.load_branch(trunk_branch_id)
+        if trunk.project_id != self.project.id:
+            raise TreeWorkspaceError("Trunk branch project mismatch")
+
+        new_branch = Branch(
+            project_id=self.project.id,
+            title=f"Working path — {alt.title}",
+            description=(
+                "Materialized branch for the selected alternative (M4 scaffold). "
+                "Extend with assumptions and M5 checks; not an adequacy conclusion."
+            ),
+            origin_decision_node_id=dec.decision_node_id,
+            origin_alternative_id=alt.id,
+            root_node_id=None,
+            state=BranchState.PENDING,
+            parent_branch_id=trunk_branch_id,
+        )
+        new_branch = self._touch_branch(new_branch)
+        self.store.save_branch(new_branch)
+
+        root = Node(
+            project_id=self.project.id,
+            branch_id=new_branch.id,
+            node_type=NodeType.OUTPUT,
+            title=f"Path root — {alt.title}",
+            description="Stub node for the selected alternative working path (M4).",
+            parent_node_id=None,
+            depth=0,
+        )
+        root = self._touch_node(root)
+        new_branch = replace(new_branch, root_node_id=root.id)
+        new_branch = self._touch_branch(new_branch)
+        self.store.save_node(root)
+        self.store.save_branch(new_branch)
+
+        dec = replace(dec, selected_alternative_id=alt.id, updated_at=utc_now())
+        self.store.save_decision(dec)
+
+        self.project.branch_ids = sorted({*self.project.branch_ids, new_branch.id})
+        self.ps.save_project(self.project)
+
+        if activate:
+            self.activate_branch(new_branch.id)
+        return new_branch, root
 
 
 __all__ = ["TreeWorkspace", "TreeWorkspaceError"]

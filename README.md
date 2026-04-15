@@ -63,7 +63,7 @@ Cada proyecto vive en `workspace/{project_id}/`:
 
 - `project.json` — identidad y punteros del dominio `Project` (`branch_ids`, `root_node_id`, `version_ids`, `head_revision_id`, `active_code_context`, …); no contiene el árbol completo
 - `assumptions.json` — lista validada de hipótesis
-- `tree/branches|nodes|decisions|alternatives/*.json` — entidades del árbol (una rama/nodo/decisión/alternativa por archivo)
+- `tree/branches|nodes|decisions|alternatives|calculations|checks|references/*.json` — entidades del árbol y registros técnicos vinculados a nodos (Block 3 M2+)
 - `revisions/{revision_id}/meta.json`, `project_snapshot.json`, `assumptions_snapshot.json`, `tree/` — copia inmutable del estado técnico en ese punto
 - `documents/{document_id}/document.json` + `fragments.json` — corpus registrado e fragmentos para citas (M4)
 - `exports/` — reservado para hitos posteriores
@@ -81,6 +81,8 @@ python -m pytest tests/ -q
 ```
 
 (En Windows sin Make: ver `CONTRIBUTING.md`.)
+
+**Block 3 M3 — flujo a vano simple (miembro de acero primario):** `SimpleSpanSteelWorkflowService.setup_initial_workflow` en `structural_tree_app.services.simple_span_steel_workflow` crea el nodo raíz, la primera decisión y alternativas persistidas (véase `docs/implementation/BLOCK_3_STATUS.md`).
 
 ## Cómo usar esta base
 

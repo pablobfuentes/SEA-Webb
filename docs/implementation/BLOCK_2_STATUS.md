@@ -15,4 +15,6 @@ Execution order: `cursor_prompts/02` → `03` → … → `08`.
 
 **Last updated:** M7 completion (validation & integration — Block 2 closed in this repo).
 
+**Block 3 dependency:** Block 2 is **frozen as the baseline** for the next implementation phase. Do not change Block 2 contracts or milestone scope without an explicit ADR and changelog entry. The first vertical engineering workflow is planned in `docs/06_block_3_implementation_plan.md` and acceptance targets in `docs/07_block_3_acceptance_snapshot.md`.
+
 **See also:** `docs/implementation/PERSISTENCE_HARDENING.md` (revision immutability, tree integrity, revision isolation).

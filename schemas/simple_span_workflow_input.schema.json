@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SimpleSpanWorkflowInput",
+  "description": "Block 3 M3 structured inputs (SI). Validation mirrors domain checks; primary validation remains in Python.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "span_m",
+    "support_condition",
+    "member_role",
+    "include_optional_rolled_beam"
+  ],
+  "properties": {
+    "span_m": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "support_condition": {
+      "type": "string",
+      "const": "simple_span"
+    },
+    "member_role": { "type": "string", "minLength": 1 },
+    "max_depth_m": { "type": ["number", "null"] },
+    "architectural_restriction": { "type": ["string", "null"] },
+    "lightweight_preference": { "type": ["string", "null"] },
+    "fabrication_simplicity_preference": { "type": ["string", "null"] },
+    "include_optional_rolled_beam": { "type": "boolean" }
+  }
+}

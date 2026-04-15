@@ -26,6 +26,7 @@
     },
     "title": { "type": "string" },
     "description": { "type": "string" },
+    "catalog_key": { "type": "string" },
     "pros": {
       "type": "array",
       "items": { "type": "string" }
@@ -41,6 +42,50 @@
     "next_expected_decisions": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "suggested": { "type": "boolean" },
+    "suggestion_rank": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "integer", "minimum": 1 }
+      ]
+    },
+    "suggestion_score": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "number" }
+      ]
+    },
+    "suggestion_provenance": { "type": "string", "minLength": 1 },
+    "characterization_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text", "polarity", "provenance"],
+        "properties": {
+          "text": { "type": "string" },
+          "polarity": { "type": "string", "enum": ["pro", "con"] },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "retrieval_backed",
+              "workflow_heuristic",
+              "manual_placeholder",
+              "not_yet_evidenced"
+            ]
+          },
+          "reference_id": {
+            "oneOf": [{ "type": "null" }, { "type": "string", "pattern": "^[a-z]+_[a-f0-9]{12}$" }]
+          },
+          "retrieval_query": {
+            "oneOf": [{ "type": "null" }, { "type": "string" }]
+          },
+          "citation_authority": {
+            "oneOf": [{ "type": "null" }, { "type": "string" }]
+          }
+        }
+      }
     },
     "status": { "type": "string", "minLength": 1 },
     "reactivatable": { "type": "boolean" }

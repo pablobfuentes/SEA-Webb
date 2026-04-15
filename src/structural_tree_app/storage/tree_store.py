@@ -3,28 +3,37 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-from structural_tree_app.domain.models import Alternative, Branch, Decision, Node
+from structural_tree_app.domain.models import Alternative, Branch, Calculation, Check, Decision, Node, Reference
 from structural_tree_app.domain.tree_codec import (
     alternative_from_dict,
     alternative_to_dict,
     branch_from_dict,
     branch_to_dict,
+    calculation_from_dict,
+    calculation_to_dict,
+    check_from_dict,
+    check_to_dict,
     decision_from_dict,
     decision_to_dict,
     node_from_dict,
     node_to_dict,
+    reference_from_dict,
+    reference_to_dict,
 )
 from structural_tree_app.storage.json_repository import JsonRepository
 from structural_tree_app.validation.json_schema import (
     validate_alternative_payload,
     validate_branch_payload,
+    validate_calculation_payload,
+    validate_check_payload,
     validate_decision_payload,
     validate_node_payload,
+    validate_reference_payload,
 )
 
 
 class TreeStore:
-    """Persist branch/node/decision/alternative JSON under a tree root (live project or revision snapshot)."""
+    """Persist tree domain JSON: branches, nodes, decisions, alternatives, calculations, checks, references."""
 
     def __init__(self, repository: JsonRepository, relative_root: str) -> None:
         """
@@ -49,7 +58,7 @@ class TreeStore:
         return self.repo.base_path / Path(self.rel_root)
 
     def ensure_layout(self) -> None:
-        for sub in ("branches", "nodes", "decisions", "alternatives"):
+        for sub in ("branches", "nodes", "decisions", "alternatives", "calculations", "checks", "references"):
             (self.tree_root() / sub).mkdir(parents=True, exist_ok=True)
 
     def list_branch_ids(self) -> list[str]:
@@ -125,6 +134,57 @@ class TreeStore:
 
     def load_all_nodes(self) -> list[Node]:
         return [self.load_node(nid) for nid in self.list_node_ids()]
+
+    def list_calculation_ids(self) -> list[str]:
+        d = self.tree_root() / "calculations"
+        if not d.is_dir():
+            return []
+        return sorted(p.stem for p in d.glob("*.json"))
+
+    def save_calculation(self, calc: Calculation) -> None:
+        payload = calculation_to_dict(calc)
+        validate_calculation_payload(payload)
+        self.repo.write(self._rel("calculations", f"{calc.id}.json"), payload)
+
+    def load_calculation(self, calculation_id: str) -> Calculation:
+        rel = self._rel("calculations", f"{calculation_id}.json")
+        raw = self.repo.read(rel)
+        validate_calculation_payload(raw)
+        return calculation_from_dict(raw)
+
+    def list_check_ids(self) -> list[str]:
+        d = self.tree_root() / "checks"
+        if not d.is_dir():
+            return []
+        return sorted(p.stem for p in d.glob("*.json"))
+
+    def save_check(self, check: Check) -> None:
+        payload = check_to_dict(check)
+        validate_check_payload(payload)
+        self.repo.write(self._rel("checks", f"{check.id}.json"), payload)
+
+    def load_check(self, check_id: str) -> Check:
+        rel = self._rel("checks", f"{check_id}.json")
+        raw = self.repo.read(rel)
+        validate_check_payload(raw)
+        return check_from_dict(raw)
+
+    def list_reference_ids(self) -> list[str]:
+        d = self.tree_root() / "references"
+        if not d.is_dir():
+            return []
+        return sorted(p.stem for p in d.glob("*.json"))
+
+    def save_reference(self, ref: Reference) -> None:
+        payload = reference_to_dict(ref)
+        validate_reference_payload(payload)
+        self.repo.write(self._rel("references", f"{ref.id}.json"), payload)
+
+    def load_reference(self, reference_id: str) -> Reference:
+        rel = self._rel("references", f"{reference_id}.json")
+        raw = self.repo.read(rel)
+        validate_reference_payload(raw)
+        return reference_from_dict(raw)
 
 
 def copy_tree_directory(src: Path, dst: Path) -> None:

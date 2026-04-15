@@ -56,6 +56,22 @@ def validate_alternative_payload(data: dict[str, Any]) -> None:
     _validator("alternative.schema.json").validate(data)
 
 
+def validate_calculation_payload(data: dict[str, Any]) -> None:
+    _validator("calculation.schema.json").validate(data)
+
+
+def validate_check_payload(data: dict[str, Any]) -> None:
+    _validator("check.schema.json").validate(data)
+
+
+def validate_reference_payload(data: dict[str, Any]) -> None:
+    _validator("reference.schema.json").validate(data)
+
+
+def validate_simple_span_workflow_input_payload(data: dict[str, Any]) -> None:
+    _validator("simple_span_workflow_input.schema.json").validate(data)
+
+
 def validate_document_payload(data: dict[str, Any]) -> None:
     _validator("document.schema.json").validate(data)
 
@@ -67,6 +83,8 @@ def validate_document_fragment_payload(data: dict[str, Any]) -> None:
 __all__ = [
     "ValidationError",
     "validate_alternative_payload",
+    "validate_calculation_payload",
+    "validate_check_payload",
     "validate_document_fragment_payload",
     "validate_document_payload",
     "validate_assumption_record",
@@ -75,5 +93,7 @@ __all__ = [
     "validate_decision_payload",
     "validate_node_payload",
     "validate_project_payload",
+    "validate_reference_payload",
     "validate_revision_meta_payload",
+    "validate_simple_span_workflow_input_payload",
 ]

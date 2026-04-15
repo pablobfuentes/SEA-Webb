@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "project_id",
+    "document_id",
+    "fragment_id",
+    "usage_type",
+    "citation_short",
+    "citation_long",
+    "quoted_context"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "document_id": { "type": "string", "minLength": 1 },
+    "fragment_id": { "type": "string", "minLength": 1 },
+    "usage_type": { "type": "string", "minLength": 1 },
+    "citation_short": { "type": "string" },
+    "citation_long": { "type": "string" },
+    "quoted_context": { "type": "string" }
+  }
+}

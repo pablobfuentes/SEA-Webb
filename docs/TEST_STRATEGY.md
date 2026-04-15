@@ -39,6 +39,18 @@ Per `cursor_prompts/08_validation_and_integration_prompt.txt`: one scripted flow
 
 **Implemented:** `tests/test_block2_integration.py` — project → tree → ingest → approve/activate → retrieval → revision snapshot → branch comparison (live vs `for_revision_snapshot`) + deterministic branch ordering check.
 
+### 2.4 End-to-end (Block 3 — planned)
+
+Block 3 adds at least one **vertical engineering flow** test: simple-span steel member alternatives → assumptions → retrieval-backed or explicitly non-authoritative characterization → branch comparison → selected path → persisted deterministic **Calculation** / **Check** → revision snapshot replay. Planning: `docs/06_block_3_implementation_plan.md`, acceptance bar: `docs/07_block_3_acceptance_snapshot.md`.
+
+**M2 done:** persistence, codecs, schema validation, revision snapshot compatibility, and integrity checks for **Calculation** / **Check** / **Reference** are covered by `tests/test_tree_calculation_check_persistence.py` (not yet the full vertical product flow — that is M7).
+
+**M3.1 done:** catalog-driven simple-span workflow alternatives (eligibility + deterministic ranking + top-3 suggestion marking, all eligible persisted, branch-origin alternative integrity) are covered by `tests/test_simple_span_steel_workflow_m3.py` (still not M4–M7 characterization, calcs, or comparison enrichment).
+
+**M5 done:** `tests/test_simple_span_m5_preliminary.py` — materialized branch → preliminary M5 run → Calculation + Checks + assumptions persisted and reloaded; revision bundle replay; stable `calculation_to_dict` / `check_to_dict` JSON ordering; rejects trunk-only branch and duplicate M5; unsupported `catalog_key`; characterization items unchanged; empty reference ids and explicit non-retrieval authority flags.
+
+**M6 done:** `tests/test_branch_comparison.py` now covers explicit M5 comparison projection (`m5_preliminary`) and check discoverability via `calculation_id` (`m5_checks_via_calculation_id`), plus source classification (`comparison_field_sources`) separating deterministic preliminary signals from branch/tree-derived, manual-placeholder, and document-trace-pending fields. It also verifies discarded and non-selected branches remain comparable in the same output.
+
 ---
 
 ## 3. Determinism & fixtures

@@ -35,6 +35,12 @@
         { "type": "string", "minLength": 1 }
       ]
     },
+    "origin_alternative_id": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "minLength": 1 }
+      ]
+    },
     "root_node_id": {
       "oneOf": [
         { "type": "null" },

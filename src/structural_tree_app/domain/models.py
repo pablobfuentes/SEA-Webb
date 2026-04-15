@@ -122,6 +122,7 @@ class Branch:
     title: str
     description: str
     origin_decision_node_id: str | None
+    origin_alternative_id: str | None = None
     root_node_id: str | None = None
     state: BranchState = BranchState.PENDING
     parent_branch_id: str | None = None
@@ -155,13 +156,20 @@ class Node:
 
 @dataclass
 class Alternative:
+    # M4+: characterization_items holds structured claims; legacy pros/cons may remain empty.
     decision_id: str
     title: str
     description: str
+    catalog_key: str = ""
+    characterization_items: list[dict[str, Any]] = field(default_factory=list)
     pros: list[str] = field(default_factory=list)
     cons: list[str] = field(default_factory=list)
     constraints: list[str] = field(default_factory=list)
     next_expected_decisions: list[str] = field(default_factory=list)
+    suggested: bool = False
+    suggestion_rank: int | None = None
+    suggestion_score: float | None = None
+    suggestion_provenance: str = "workflow_heuristic"
     status: str = "candidate"
     reactivatable: bool = True
     id: str = field(default_factory=lambda: new_id("alt"))
