@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Workbench{% endblock %} · Structural Tree</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; line-height: 1.4; }
+    body { margin: 0; padding: 0.75rem 1rem; background: #f4f4f4; color: #111; }
+    header { border-bottom: 1px solid #ccc; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+    header h1 { font-size: 1.1rem; margin: 0; }
+    .banner { background: #333; color: #eee; padding: 0.35rem 0.5rem; font-size: 0.85rem; margin-bottom: 1rem; }
+    main { max-width: 56rem; }
+    code { background: #e8e8e8; padding: 0.05rem 0.25rem; }
+    footer { margin-top: 2rem; font-size: 0.8rem; color: #555; }
+    {% block extra_css %}{% endblock %}
+  </style>
+</head>
+<body>
+  <div class="banner">Validation workbench — not production UI. Authority labels appear on feature panels (later milestones).</div>
+  <header>
+    <h1>{% block heading %}Structural Tree{% endblock %}</h1>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <footer>
+    <p>GET <code>/health</code> · Block 4A M3 workbench (thin routes + session pointer)</p>
+  </footer>
+</body>
+</html>

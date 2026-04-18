@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Project hub{% endblock %}
+{% block heading %}Validation workbench — project hub{% endblock %}
+{% block content %}
+<section aria-labelledby="ws-heading">
+  <h2 id="ws-heading" style="font-size:1rem;">Workspace</h2>
+  <p>JSON workspace root: <code>{{ workspace_path }}</code></p>
+  <p>Override with env <code>{{ workspace_env }}</code>. Session signing: <code>{{ session_secret_env }}</code> (set in non-dev).</p>
+  <p>Install: <code>pip install -e ".[dev,workbench]"</code></p>
+</section>
+
+{% if msg %}<p role="status" style="color:#060;"><strong>Notice:</strong> {{ msg }}</p>{% endif %}
+{% if err %}<p role="alert" style="color:#600;"><strong>Error:</strong> {{ err }}</p>{% endif %}
+
+<section aria-labelledby="sess-heading" style="margin-top:1.25rem;">
+  <h2 id="sess-heading" style="font-size:1rem;">Session pointer</h2>
+  {% if current_project_id %}
+  <p>Current <code>project_id</code>: <code>{{ current_project_id }}</code> ({{ current_project_name or "?" }})</p>
+  <p><a href="/workbench/project/workflow">Simple-span workflow (M3)</a></p>
+  <form method="post" action="/workbench/project/close" style="margin-top:0.5rem;">
+    <button type="submit">Clear project pointer</button>
+  </form>
+  {% else %}
+  <p><em>No project selected.</em></p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="create-heading" style="margin-top:1.25rem;">
+  <h2 id="create-heading" style="font-size:1rem;">Create project</h2>
+  <form method="post" action="/workbench/project/create">
+    <p><label>Name <input name="name" required style="min-width:16rem;"></label></p>
+    <p><label>Description <input name="description" style="min-width:20rem;"></label></p>
+    <p><label>Language <input name="language" value="es"></label>
+       <label>Unit system <input name="unit_system" value="SI"></label>
+       <label>Primary standard <input name="primary_standard_family" value="AISC"></label></p>
+    <p><button type="submit">Create</button></p>
+  </form>
+</section>
+
+<section aria-labelledby="open-heading" style="margin-top:1.25rem;">
+  <h2 id="open-heading" style="font-size:1rem;">Open project by id</h2>
+  <form method="post" action="/workbench/project/open">
+    <p><label><code>project_id</code> <input name="project_id" required style="min-width:22rem;" placeholder="proj_…"></label></p>
+    <p><button type="submit">Open</button></p>
+  </form>
+</section>
+{% endblock %}

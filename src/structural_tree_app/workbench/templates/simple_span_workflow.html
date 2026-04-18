@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Simple-span workflow{% endblock %}
+{% block heading %}Simple-span steel workflow (M3){% endblock %}
+{% block content %}
+<p><a href="/workbench">← Project hub</a></p>
+
+<section>
+  <h2 style="font-size:1rem;">Context</h2>
+  <p>Project <code>{{ project.id }}</code> — {{ project.name }}</p>
+  <p>Workspace: <code>{{ workspace_path }}</code></p>
+</section>
+
+{% if msg %}<p role="status" style="color:#060;"><strong>Notice:</strong> {{ msg }}</p>{% endif %}
+{% if err %}<p role="alert" style="color:#600;"><strong>Error:</strong> {{ err }}</p>{% endif %}
+
+{% if snapshot %}
+<section style="margin-top:1rem;">
+  <h2 style="font-size:1rem;">Persisted workflow (read from storage)</h2>
+  <p><code>workflow_id</code>: <code>{{ snapshot.workflow_id }}</code></p>
+  <p><code>main_branch_id</code>: <code>{{ snapshot.main_branch_id }}</code></p>
+  <p>Root problem: <code>{{ snapshot.root_problem_node_id }}</code> — {{ snapshot.root_problem_title }}</p>
+  <p>Decision node: <code>{{ snapshot.decision_node_id }}</code> · decision row <code>{{ snapshot.decision_id }}</code></p>
+  <p>Prompt: {{ snapshot.decision_prompt }}</p>
+  <h3 style="font-size:0.95rem;">Alternatives</h3>
+  <table border="1" cellpadding="4" style="border-collapse:collapse;font-size:0.9rem;">
+    <thead><tr><th>id</th><th>title</th><th>catalog_key</th><th>suggested</th><th>rank</th></tr></thead>
+    <tbody>
+    {% for a in snapshot.alternatives %}
+      <tr>
+        <td><code>{{ a.id }}</code></td>
+        <td>{{ a.title }}</td>
+        <td>{% if a.catalog_key %}<code>{{ a.catalog_key }}</code>{% else %}—{% endif %}</td>
+        <td>{{ a.suggested }}</td>
+        <td>{{ a.suggestion_rank if a.suggestion_rank is not none else "—" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% else %}
+<section style="margin-top:1rem;">
+  <h2 style="font-size:1rem;">Setup inputs</h2>
+  <p>Maps to <code>SimpleSpanWorkflowInput</code> / JSON schema <code>simple_span_workflow_input.schema.json</code>.</p>
+  <form method="post" action="/workbench/project/workflow">
+    <p><label>span_m (SI) <input name="span_m" type="number" step="any" required value="12"></label></p>
+    <p><label>support_condition <input name="support_condition" value="simple_span" readonly></label> (M3 fixed)</p>
+    <p><label>member_role <input name="member_role" value="primary_steel_member"></label></p>
+    <p><label>max_depth_m (optional) <input name="max_depth_m" type="number" step="any" placeholder="empty = none"></label></p>
+    <p><label>architectural_restriction <input name="architectural_restriction" style="min-width:20rem;"></label></p>
+    <p><label>lightweight_preference <input name="lightweight_preference"></label></p>
+    <p><label>fabrication_simplicity_preference <input name="fabrication_simplicity_preference"></label></p>
+    <p><label><input type="checkbox" name="include_optional_rolled_beam" value="on"> include_optional_rolled_beam</label></p>
+    <p><button type="submit">Run setup_initial_workflow</button></p>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

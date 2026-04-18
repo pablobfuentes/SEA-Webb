@@ -16,3 +16,5 @@ Planning: `docs/06_block_3_implementation_plan.md` · Acceptance: `docs/07_block
 | M7 — E2E vertical flow validation | **Complete** | `tests/test_block3_vertical_flow.py` — full vertical: M3→M4→materialize→M5→M6→revision replay; report: `docs/08_block_3_validation_report.md` |
 
 **Last updated:** Block 3 M7 (E2E vertical acceptance + validation report).
+
+**Frozen baseline:** Block 3 backend/domain is **closed** for feature work except **justified bugfixes** (changelog + review). The next implementation phase is **Block 4A** (validation workbench UI) — see `docs/09_block_4a_implementation_plan.md`; dependency context only — Block 3 services remain the source of truth.

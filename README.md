@@ -82,6 +82,18 @@ python -m pytest tests/ -q
 
 (En Windows sin Make: ver `CONTRIBUTING.md`.)
 
+### Block 4A — Workbench (validación UI)
+
+Requiere extras: `pip install -e ".[dev,workbench]"`.
+
+Arranque local:
+
+```bash
+python -m structural_tree_app.workbench
+```
+
+Por defecto escucha en `http://127.0.0.1:8000` — rutas `GET /health`, `GET /workbench` (hub de proyecto), `GET|POST /workbench/project/workflow` (M3: formulario vano simple → `setup_initial_workflow`). Variable `STRUCTURAL_TREE_WORKSPACE` define la raíz del workspace JSON (mismo contrato que `ProjectService`); `WORKBENCH_SESSION_SECRET` opcional para cookies de sesión. Ver `docs/09_block_4a_implementation_plan.md`.
+
 **Block 3 M3 — flujo a vano simple (miembro de acero primario):** `SimpleSpanSteelWorkflowService.setup_initial_workflow` en `structural_tree_app.services.simple_span_steel_workflow` crea el nodo raíz, la primera decisión y alternativas persistidas (véase `docs/implementation/BLOCK_3_STATUS.md`).
 
 ## Cómo usar esta base
@@ -107,5 +119,6 @@ Validación completa Block 2: `docs/05_block_2_validation_report.md`.
 
 ## Siguiente bloque lógico de implementación
 
-- **Block 3 / UI** y vistas del árbol: fase posterior (no incluida en Block 2).
+- **Block 3** (vertical simple-span acero) está **cerrado** en este repositorio como línea base — `docs/implementation/BLOCK_3_STATUS.md`, `docs/08_block_3_validation_report.md`.
+- **Block 4A** (planificación): **workbench frontend mínimo** para validar el flujo Block 3 por UI local — **no** es la UI final del producto. Plan: `docs/09_block_4a_implementation_plan.md`, criterios: `docs/10_block_4a_acceptance_snapshot.md`, estado: `docs/implementation/BLOCK_4A_STATUS.md`.
 - Mejoras de producto pospuestas explícitamente: ver `docs/05_block_2_validation_report.md` §2(c) y `docs/CHANGELOG.md`.

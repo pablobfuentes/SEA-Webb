@@ -16,10 +16,22 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
+  "httpx>=0.27",
+]
+workbench = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "jinja2>=3.1",
+  "python-multipart>=0.0.9",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+structural_tree_app = [
+  "workbench/templates/*.html",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -51,6 +51,21 @@ Per `cursor_prompts/08_validation_and_integration_prompt.txt`: one scripted flow
 
 **M6 done:** `tests/test_branch_comparison.py` now covers explicit M5 comparison projection (`m5_preliminary`) and check discoverability via `calculation_id` (`m5_checks_via_calculation_id`), plus source classification (`comparison_field_sources`) separating deterministic preliminary signals from branch/tree-derived, manual-placeholder, and document-trace-pending fields. It also verifies discarded and non-selected branches remain comparable in the same output.
 
+### 2.5 Block 4A — Minimum validation workbench
+
+Block 4A adds a **thin local frontend** (see `docs/09_block_4a_implementation_plan.md`) to drive the **frozen Block 3** APIs through real interactions. **Not** the final product UI.
+
+**M2 done:** FastAPI + Jinja2 shell — `tests/test_workbench_m2.py` (`/health`, `/workbench`, workspace env). Run: `python -m structural_tree_app.workbench` after `pip install -e ".[dev,workbench]"`.
+
+**M3 done:** Project hub + simple-span workflow — `tests/test_workbench_m3.py` (session `project_id`, `POST` workflow → persisted snapshot). Same install extra; optional `WORKBENCH_SESSION_SECRET` for signed session cookies.
+
+**Planned validation (M3+)**
+
+- HTTP/route-level tests (`TestClient`) for create project → simple-span workflow → materialize → M5 → M6 → revision replay, mirroring `tests/test_block3_vertical_flow.py` where possible.
+- Assertions that response bodies include mandatory **authority / preliminary / internal-trace** labeling strings (see plan §G).
+- Manual checklist: `docs/10_block_4a_acceptance_snapshot.md` §3.
+- Tracker: `docs/implementation/BLOCK_4A_STATUS.md`.
+
 ---
 
 ## 3. Determinism & fixtures

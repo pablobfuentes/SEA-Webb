@@ -5,6 +5,66 @@ All notable changes to the **structural_tree_app_foundation** repository are doc
 
 ## [Unreleased]
 
+### Block 4A — M3 — Project hub + simple-span workflow setup
+
+**Added**
+
+- `workbench/pages.py` — routes: `GET /workbench` (hub), `POST` create/open/close project, `GET|POST /workbench/project/workflow`; thin handlers calling `ProjectService` and `SimpleSpanSteelWorkflowService.setup_initial_workflow`.
+- `workbench/deps.py` — `ProjectService` + session `project_id` pointer dependencies.
+- `workbench/workflow_summary.py` — read-only snapshot from `TreeStore` for templates.
+- `workbench/form_parsing.py` — form → `SimpleSpanWorkflowInput` coercion.
+- `workbench/templates/workbench_hub.html`, `simple_span_workflow.html` — validation workbench framing; install line `pip install -e ".[dev,workbench]"`.
+- `tests/test_workbench_m3.py` — create project, workflow POST, redirect, persisted snapshot HTML.
+
+**Changed**
+
+- `workbench/app.py` — `SessionMiddleware`; include workbench router; removed obsolete `workbench.html` shell.
+- `workbench/config.py` — `get_templates_dir`, `get_session_secret` / `WORKBENCH_SESSION_SECRET`.
+- `pyproject.toml` — `workbench` extra: `python-multipart` (form posts).
+
+**Verification**
+
+- `python -m pytest tests/ -q` — 74 passed.
+
+### Block 4A — M2 — FastAPI + Jinja workbench shell
+
+**Added**
+
+- `src/structural_tree_app/workbench/` — `create_app()`, `/health`, `/` → `/workbench`, templates `base.html` / `workbench.html`, `STRUCTURAL_TREE_WORKSPACE` config, `python -m structural_tree_app.workbench` (uvicorn).
+- `tests/test_workbench_m2.py` — health, redirect, workbench HTML, optional `project_id` query display.
+- `pyproject.toml` — optional dependency group `workbench` (fastapi, uvicorn, jinja2), `httpx` in dev; `package-data` for templates.
+
+**Changed**
+
+- `README.md` — workbench run instructions.
+- `docs/implementation/BLOCK_4A_STATUS.md` — M2 complete.
+
+**Verification**
+
+- `python -m pytest tests/ -q` — 72 passed (superseded by M3 verification count).
+
+### Block 4A — Planning — Minimum validation workbench (frontend)
+
+**Rationale**
+
+- Define the first thin, local frontend layer to exercise the frozen Block 3 vertical flow through UI interactions — without implementing UI in this step.
+
+**Added**
+
+- `docs/09_block_4a_implementation_plan.md` — scope, architecture proposal (FastAPI + Jinja recommended), milestones 4A-M1–M7, traceability, testing, acceptance, deferred items.
+- `docs/10_block_4a_acceptance_snapshot.md` — acceptance criteria and manual checklist placeholders.
+- `docs/implementation/BLOCK_4A_STATUS.md` — milestone tracker (all pending until implementation).
+
+**Changed**
+
+- `docs/TEST_STRATEGY.md` — Block 4A planned testing subsection.
+- `README.md` — pointer to Block 4A planning; next-step wording.
+- `docs/implementation/BLOCK_3_STATUS.md` — Block 4A dependency note (frozen baseline).
+
+**Verification**
+
+- Documentation-only change; no runtime code added.
+
 ### Block 3 — M7 — E2E vertical flow validation + validation report
 
 **Rationale**
