@@ -697,7 +697,7 @@ Seguimiento Block 3 (viga acero, claro simple): §18.
 + 18.3 Seleccion de alternativa y rama de trabajo
   - [x] Alternativas ligeras bajo la decision hasta seleccion; materializacion de rama de trabajo dedicada al elegir (`materialize_working_branch_for_alternative`)
   - [x] Clonacion de rama conserva `characterization_items` y mapea `origin_alternative_id`
-+ 18.4 Fuera de este bloque en foundation
-  - [ ] Calculos deterministicos de comprobacion (M5)
-  - [ ] Enriquecimiento comparativo de ramas (M6)
-  - [ ] Flujo vertical E2E completo de producto (M7)
++ 18.4 Cierre foundation Block 3 (M5–M7)
+  - [x] Calculos deterministicos preliminares de comprobacion (M5) — senal de workflow, no idoneidad completa
+  - [x] Enriquecimiento comparativo de ramas (M6) — proyeccion M5 y fuentes de campo explicitas
+  - [x] Flujo vertical E2E validado (M7) — `tests/test_block3_vertical_flow.py`, informe `docs/08_block_3_validation_report.md`

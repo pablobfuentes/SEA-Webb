@@ -1,7 +1,7 @@
 # Block 3 — Implementation plan (planning phase)
 
-**Status:** Block 3 **M2** implemented (tree persistence for `Calculation`, `Check`, `Reference`). **M3+** not started — workflow generation, retrieval-backed pros/cons, and deterministic engine remain future milestones.  
-**Date:** 2026-04-12  
+**Status:** Block 3 **M1–M7** implemented for the agreed foundation vertical slice; see `docs/implementation/BLOCK_3_STATUS.md`, `docs/08_block_3_validation_report.md`.  
+**Date:** 2026-04-12 (plan); M7 validation 2026-04-18  
 **Depends on:** Block 2 closed — see `docs/05_block_2_validation_report.md`, `docs/implementation/BLOCK_2_STATUS.md` (frozen baseline). **M2+ progress:** `docs/implementation/BLOCK_3_STATUS.md`.
 
 ---

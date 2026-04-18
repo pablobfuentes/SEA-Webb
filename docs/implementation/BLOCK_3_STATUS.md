@@ -13,6 +13,6 @@ Planning: `docs/06_block_3_implementation_plan.md` · Acceptance: `docs/07_block
 | M4 — Evidence-backed characterization | **Complete** | Structured `characterization_items` on `Alternative` with provenance (`retrieval_backed`, `workflow_heuristic`, `manual_placeholder`, `not_yet_evidenced`); `DocumentRetrievalService` wired for normative corpus; `apply_simple_span_m4_characterization` after M3 setup; `TreeWorkspace.materialize_working_branch_for_alternative`; clone + integrity + schema; tests: `tests/test_simple_span_m4_characterization.py` |
 | M5 — Deterministic calculation slice | **Complete** | Narrow preliminary metrics + `preliminary_max_depth_fit` / `preliminary_fabrication_alignment` checks; `services/deterministic/simple_span_preliminary_m5.py` + `run_simple_span_m5_preliminary` (path root); explicit assumptions; no retrieval/LLM; tests: `tests/test_simple_span_m5_preliminary.py` |
 | M6 — Branch comparison enrichment | **Complete** | `BranchComparisonRow` now carries explicit M5 preliminary slice projection + checks discovered via `calculation_id`; comparison field-source map separates `m5_deterministic_preliminary`, `branch_tree_derived`, `manual_placeholder`, `document_trace_pending`; discarded/non-selected branches still comparable; tests: `tests/test_branch_comparison.py` |
-| M7 — E2E vertical flow validation | Pending | — |
+| M7 — E2E vertical flow validation | **Complete** | `tests/test_block3_vertical_flow.py` — full vertical: M3→M4→materialize→M5→M6→revision replay; report: `docs/08_block_3_validation_report.md` |
 
-**Last updated:** Block 3 M6 (comparison enriched with explicit preliminary M5 provenance boundaries and check-discovery path).
+**Last updated:** Block 3 M7 (E2E vertical acceptance + validation report).

@@ -5,6 +5,29 @@ All notable changes to the **structural_tree_app_foundation** repository are doc
 
 ## [Unreleased]
 
+### Block 3 — M7 — E2E vertical flow validation + validation report
+
+**Rationale**
+
+- Close Block 3 with one automated scenario that exercises M3→M4→materialized working branch→M5→M6→revision snapshot replay, with explicit documentation of preliminary vs authoritative boundaries and deferred registry work.
+
+**Added**
+
+- `tests/test_block3_vertical_flow.py` — `test_block3_m7_vertical_e2e_simple_span_castellated_m5_m6_revision_replay` (15 m span, four alternatives including optional rolled, castellated path, live vs snapshot comparison equivalence for M5 fields).
+- `docs/08_block_3_validation_report.md` — acceptance narrative, output classification table, check-discovery via `calculation_id`, `method_label` deferrals.
+
+**Changed**
+
+- `docs/implementation/BLOCK_3_STATUS.md` — M7 complete.
+- `docs/TEST_STRATEGY.md` — Block 3 E2E section points to M7 test + validation report.
+- `docs/07_block_3_acceptance_snapshot.md` — documentation deliverables checked; test name fixed.
+- `PBS Structural Engineer App.txt` §18.4 — M5–M7 marked complete for foundation scope.
+
+**Verification**
+
+- `python -m pytest tests/test_block3_vertical_flow.py -q` — 1 passed.
+- `python -m pytest tests/ -q` — 67 passed.
+
 ### Block 3 — M6 — Branch comparison enriched with explicit M5 boundaries
 
 **Rationale**

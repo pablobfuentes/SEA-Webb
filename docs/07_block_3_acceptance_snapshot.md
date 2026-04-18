@@ -1,7 +1,7 @@
 # Block 3 — Acceptance snapshot (planning)
 
 **Purpose:** Define what “Block 3 complete” means for **acceptance and testing**, aligned with `docs/06_block_3_implementation_plan.md`.  
-**Status:** Planning baseline — update after implementation with actual test names and commit references.
+**Status:** Implementation baseline — E2E: `tests/test_block3_vertical_flow.py::test_block3_m7_vertical_e2e_simple_span_castellated_m5_m6_revision_replay`; report: `docs/08_block_3_validation_report.md`.
 
 ---
 
@@ -25,7 +25,7 @@ After Block 3, a user or integrator can run a **single coherent engineering work
 
 | # | Criterion | Verification |
 |---|-----------|----------------|
-| A | **E2E test** covers the full vertical flow (live + revision) | `tests/test_block3_*.py` (exact name TBD in implementation) passes |
+| A | **E2E test** covers the full vertical flow (live + revision) | `tests/test_block3_vertical_flow.py` passes |
 | B | **Deterministic core** — same stored inputs → same calc/check outputs | Unit tests for deterministic module(s) |
 | C | **Retrieval authority** — no user-facing normative claim without retrieval path or explicit refusal | Tests use corpus fixture; assert `CitationPayload` or `insufficient_evidence` |
 | D | **Provenance** — non-corpus pros/cons are labeled | Schema + unit tests |
@@ -57,10 +57,10 @@ After Block 3, a user or integrator can run a **single coherent engineering work
 
 ## 5. Documentation deliverables at Block 3 close
 
-- [ ] `docs/08_block_3_validation_report.md` (or equivalent) summarizing E2E + boundaries  
-- [ ] `docs/CHANGELOG.md` — Block 3 implementation entry  
-- [ ] `docs/TEST_STRATEGY.md` — Block 3 E2E pointer  
+- [x] `docs/08_block_3_validation_report.md` — E2E + preliminary vs authoritative + deferred items  
+- [x] `docs/CHANGELOG.md` — Block 3 M7 entry  
+- [x] `docs/TEST_STRATEGY.md` — Block 3 E2E pointer  
 
 ---
 
-**Last updated:** 2026-04-12 (planning phase).
+**Last updated:** 2026-04-18 (M7 complete).

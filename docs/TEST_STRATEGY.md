@@ -39,11 +39,11 @@ Per `cursor_prompts/08_validation_and_integration_prompt.txt`: one scripted flow
 
 **Implemented:** `tests/test_block2_integration.py` — project → tree → ingest → approve/activate → retrieval → revision snapshot → branch comparison (live vs `for_revision_snapshot`) + deterministic branch ordering check.
 
-### 2.4 End-to-end (Block 3 — planned)
+### 2.4 End-to-end (Block 3)
 
-Block 3 adds at least one **vertical engineering flow** test: simple-span steel member alternatives → assumptions → retrieval-backed or explicitly non-authoritative characterization → branch comparison → selected path → persisted deterministic **Calculation** / **Check** → revision snapshot replay. Planning: `docs/06_block_3_implementation_plan.md`, acceptance bar: `docs/07_block_3_acceptance_snapshot.md`.
+**Implemented (M7):** `tests/test_block3_vertical_flow.py` — single scenario: simple-span workflow (four alternatives with optional rolled) → M4 characterization (provenance) → materialized working branch for **castellated** → M5 preliminary **Calculation** / **Check** → M6 **BranchComparisonService** (live) → `create_revision` → comparison replay via `for_revision_snapshot` with equivalent M5 rows (excluding `generated_at`). Planning: `docs/06_block_3_implementation_plan.md`. Acceptance + boundaries: `docs/07_block_3_acceptance_snapshot.md`, `docs/08_block_3_validation_report.md`.
 
-**M2 done:** persistence, codecs, schema validation, revision snapshot compatibility, and integrity checks for **Calculation** / **Check** / **Reference** are covered by `tests/test_tree_calculation_check_persistence.py` (not yet the full vertical product flow — that is M7).
+**M2 done:** persistence, codecs, schema validation, revision snapshot compatibility, and integrity checks for **Calculation** / **Check** / **Reference** are covered by `tests/test_tree_calculation_check_persistence.py`.
 
 **M3.1 done:** catalog-driven simple-span workflow alternatives (eligibility + deterministic ranking + top-3 suggestion marking, all eligible persisted, branch-origin alternative integrity) are covered by `tests/test_simple_span_steel_workflow_m3.py` (still not M4–M7 characterization, calcs, or comparison enrichment).
 
