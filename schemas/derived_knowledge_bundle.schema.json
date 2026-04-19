@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://structural-tree.local/schemas/derived_knowledge_bundle.schema.json",
+  "title": "DerivedKnowledgeBundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority_disclaimer",
+    "artifacts",
+    "bundle_version",
+    "fingerprint_inputs",
+    "generated_at",
+    "generation_mode",
+    "governance_warnings_snapshot",
+    "normative_retrieval_source",
+    "normative_retrieval_would_block",
+    "project_id",
+    "schema_version",
+    "source_fingerprint"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "project_id": { "type": "string", "minLength": 1 },
+    "bundle_version": { "type": "integer", "minimum": 1 },
+    "generated_at": { "type": "string" },
+    "generation_mode": { "type": "string", "enum": ["deterministic_v1"] },
+    "authority_disclaimer": { "type": "string" },
+    "source_fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "normative_retrieval_would_block": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "string",
+          "enum": ["conflict", "missing_index", "empty_authoritative"]
+        }
+      ]
+    },
+    "normative_retrieval_source": { "type": "string" },
+    "governance_warnings_snapshot": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "fingerprint_inputs": { "type": "object" },
+    "artifacts": { "$ref": "#/$defs/artifacts" }
+  },
+  "$defs": {
+    "source_anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "document_id",
+        "fragment_id",
+        "document_content_hash",
+        "fragment_content_hash"
+      ],
+      "properties": {
+        "document_id": { "type": "string" },
+        "fragment_id": { "type": "string" },
+        "document_content_hash": { "type": "string" },
+        "fragment_content_hash": { "type": "string" },
+        "governance_disposition": { "type": ["string", "null"] },
+        "normative_classification": { "type": ["string", "null"] }
+      }
+    },
+    "document_digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coverage_bullets",
+        "document_id",
+        "document_title",
+        "fragment_anchors",
+        "governance_disposition",
+        "governance_note",
+        "standard_family"
+      ],
+      "properties": {
+        "document_id": { "type": "string" },
+        "document_title": { "type": "string" },
+        "standard_family": { "type": ["string", "null"] },
+        "coverage_bullets": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "fragment_anchors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/source_anchor" }
+        },
+        "governance_disposition": { "type": ["string", "null"] },
+        "governance_note": { "type": "string" }
+      }
+    },
+    "topic_digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["document_ids", "fragment_anchors", "summary_lines", "topic_key"],
+      "properties": {
+        "topic_key": { "type": "string" },
+        "summary_lines": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "document_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "fragment_anchors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/source_anchor" }
+        }
+      }
+    },
+    "navigation_hint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "consult_document_ids",
+        "consult_fragment_ids",
+        "hint_id",
+        "label"
+      ],
+      "properties": {
+        "hint_id": { "type": "string" },
+        "label": { "type": "string" },
+        "consult_document_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "consult_fragment_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "formula_registry_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entry_id",
+        "execution_capability",
+        "label",
+        "non_authoritative",
+        "recognition_pattern_id",
+        "supported_by_anchors"
+      ],
+      "properties": {
+        "entry_id": { "type": "string" },
+        "label": { "type": "string" },
+        "recognition_pattern_id": { "type": "string" },
+        "execution_capability": {
+          "type": "string",
+          "enum": ["none", "deterministic_m5_hook"]
+        },
+        "non_authoritative": { "type": "boolean" },
+        "supported_by_anchors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/source_anchor" }
+        }
+      }
+    },
+    "governance_signal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["disposition", "document_id", "note", "related_document_ids", "signal_id"],
+      "properties": {
+        "signal_id": { "type": "string" },
+        "document_id": { "type": "string" },
+        "disposition": { "type": "string" },
+        "note": { "type": "string" },
+        "related_document_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "document_digests",
+        "formula_registry_entries",
+        "governance_signals",
+        "navigation_hints",
+        "topic_digests"
+      ],
+      "properties": {
+        "document_digests": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/document_digest" }
+        },
+        "topic_digests": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/topic_digest" }
+        },
+        "navigation_hints": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/navigation_hint" }
+        },
+        "formula_registry_entries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/formula_registry_entry" }
+        },
+        "governance_signals": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/governance_signal" }
+        }
+      }
+    }
+  }
+}

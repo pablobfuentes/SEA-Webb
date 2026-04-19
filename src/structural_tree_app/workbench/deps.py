@@ -11,6 +11,8 @@ from structural_tree_app.services.project_service import ProjectService
 from structural_tree_app.workbench.config import get_workspace_path
 
 SESSION_PROJECT_KEY = "project_id"
+# Last non-empty assist retrieval query for this session (same project). Used for cross-surface handoff.
+SESSION_LAST_ASSIST_QUERY_KEY = "last_assist_query"
 
 
 def get_project_service() -> ProjectService:

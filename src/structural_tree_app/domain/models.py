@@ -95,7 +95,7 @@ class DocumentFragment:
     document_id: str
     chapter: str
     section: str
-    page_start: int | None
+    page_start: int | None  # PDF: 1-based physical page index (first page of file = 1); None for non-paged text
     page_end: int | None
     fragment_type: str
     topic_tags: list[str]

@@ -108,6 +108,14 @@ def validate_truth_proposal_payload(data: dict[str, Any]) -> None:
     _validator("truth_proposal.schema.json").validate(data)
 
 
+def validate_derived_knowledge_bundle_payload(data: dict[str, Any]) -> None:
+    _validator("derived_knowledge_bundle.schema.json").validate(data)
+
+
+def validate_reasoning_bridge_result_payload(data: dict[str, Any]) -> None:
+    _validator("reasoning_bridge_result.schema.json").validate(data)
+
+
 __all__ = [
     "ValidationError",
     "validate_active_knowledge_projection_payload",
@@ -118,6 +126,7 @@ __all__ = [
     "validate_document_payload",
     "validate_document_corpus_assessment_payload",
     "validate_document_governance_index_payload",
+    "validate_derived_knowledge_bundle_payload",
     "validate_document_governance_record_payload",
     "validate_assumption_record",
     "validate_assumptions_list_payload",
@@ -128,6 +137,7 @@ __all__ = [
     "validate_node_payload",
     "validate_project_payload",
     "validate_reference_payload",
+    "validate_reasoning_bridge_result_payload",
     "validate_revision_meta_payload",
     "validate_simple_span_workflow_input_payload",
     "validate_truth_proposal_payload",

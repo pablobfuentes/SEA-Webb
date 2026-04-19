@@ -104,7 +104,7 @@ def test_u2_post_chat_success_citations_and_fragment_link(client: TestClient, tm
     assert 'aria-label="Assist response"' in r.text
     assert "response_authority_summary" in r.text
     assert "/workbench/project/evidence/fragment/" in r.text
-    assert "Open source fragment" in r.text
+    assert "Open citation source view" in r.text
 
 
 def test_u2_post_shows_answer_authority_warnings_structure(client: TestClient, tmp_path) -> None:

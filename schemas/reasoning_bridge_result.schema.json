@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://structural-tree.local/schemas/reasoning_bridge_result.schema.json",
+  "title": "ReasoningBridgeResult",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "analysis_status",
+    "bridge_disclaimer",
+    "candidate_formulas",
+    "candidate_process_steps",
+    "evidence_anchors",
+    "generated_at",
+    "governance_normative_block",
+    "interpretation",
+    "project_id",
+    "query_text",
+    "retrieval_message",
+    "retrieval_normative_source",
+    "retrieval_status",
+    "schema_version",
+    "supported_execution_steps",
+    "unsupported_gaps",
+    "warnings"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "project_id": { "type": "string", "minLength": 1 },
+    "query_text": { "type": "string" },
+    "analysis_status": {
+      "type": "string",
+      "enum": ["ok", "unsupported_query", "error"]
+    },
+    "analysis_error_message": { "type": ["string", "null"] },
+    "generated_at": { "type": "string" },
+    "bridge_disclaimer": { "type": "string" },
+    "retrieval_status": { "type": "string" },
+    "retrieval_normative_source": { "type": "string" },
+    "governance_normative_block": {
+      "anyOf": [
+        { "type": "null" },
+        { "type": "string", "enum": ["conflict", "missing_index", "empty_authoritative"] }
+      ]
+    },
+    "retrieval_message": { "type": "string" },
+    "interpretation": { "type": ["object", "null"] },
+    "candidate_process_steps": { "type": "array" },
+    "candidate_formulas": { "type": "array" },
+    "supported_execution_steps": { "type": "array" },
+    "unsupported_gaps": { "type": "array" },
+    "evidence_anchors": { "type": "array" },
+    "warnings": { "type": "array", "items": { "type": "string" } }
+  }
+}

@@ -1,0 +1,83 @@
+{# U4 — project logic & audit (read-only persisted artifacts; not retrieval citations). #}
+<section class="u4-logic-audit" id="u4-logic-audit" aria-labelledby="u4-logic-audit-h">
+  <h2 id="u4-logic-audit-h" style="font-size:1.05rem;margin:1.25rem 0 0.5rem 0;border-top:1px solid #bbb;padding-top:0.75rem;">Logic &amp; audit (U4)</h2>
+  <p class="meta" style="margin:0 0 0.5rem 0;">
+    Persisted <strong>assumptions</strong>, <strong>deterministic calculations</strong>, and <strong>checks</strong> for this project (tree / assumption log).
+    <strong>Authoritative governed document evidence</strong> appears only in the retrieval response above as citations — not here.
+    <a href="{{ u4_logic_audit.workflow_href }}">Workflow</a> (materialization, M5 preliminary, etc.).
+  </p>
+  <div class="u4-disclaimer warn" role="note">
+    <strong>Boundary:</strong> {{ u4_logic_audit.preliminary_disclaimer }}
+    M5 rows use <code>method_label</code> = <code>{{ u4_logic_audit.m5_method_label }}</code> when present.
+  </div>
+
+  {% if not u4_logic_audit.has_any %}
+  <p class="meta u4-empty" role="status">
+    <strong>No logic artifacts recorded yet.</strong> This project has no assumptions on file and no calculations or checks in the tree store.
+    Nothing is hidden: run workflow steps (e.g. simple-span branch materialization and M5 preliminary) when your project uses them, then refresh this page.
+  </p>
+  {% else %}
+
+  {% if u4_logic_audit.assumptions %}
+  <div class="u4-assumptions assume" role="region" aria-label="Project assumptions audit">
+    <strong>Assumptions (project log — not normative citations)</strong>
+    <ul style="margin:0.35rem 0 0 1rem;">
+      {% for a in u4_logic_audit.assumptions %}
+      <li><code>{{ a.id }}</code> · <strong>{{ a.label }}</strong> = {{ a.value }}{% if a.unit %} {{ a.unit }}{% endif %}
+        <span class="meta">· node <code>{{ a.node_id }}</code> · {{ a.source_type }}</span>
+        {% if a.rationale %}<br><span class="meta">{{ a.rationale }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if u4_logic_audit.calculations %}
+  <div class="u4-deterministic" role="region" aria-label="Deterministic calculations audit">
+    <strong>Calculations (deterministic — not document evidence)</strong>
+    <p class="meta" style="margin:0.25rem 0 0.5rem;">These rows are persisted engine outputs. They are <em>not</em> merged into citation authority.</p>
+    <ul style="list-style:none;padding:0;margin:0;">
+      {% for c in u4_logic_audit.calculations %}
+      <li class="u4-calc-row" style="border:1px dashed #666;margin:0.5rem 0;padding:0.5rem;background:#f9f9f9;">
+        <span class="u4-det-badge">deterministic</span>
+        {% if c.is_m5_preliminary %}<span class="u4-prelim-badge">preliminary M5</span>{% endif %}
+        <code>{{ c.id }}</code> · <strong>{{ c.method_label }}</strong> · status <code>{{ c.status }}</code>
+        <br><span class="meta">node <code>{{ c.node_id }}</code> · {{ c.authority_boundary }}</span>
+        <br><span class="meta">objective:</span> {{ c.objective }}
+        {% if c.formula_text %}<br><span class="meta">formula_text:</span> <code>{{ c.formula_text }}</code>{% endif %}
+        <details style="margin-top:0.35rem;">
+          <summary>Inputs / result (persisted)</summary>
+          <p class="meta" style="margin:0.25rem 0;">inputs</p>
+          <pre class="snippet" style="font-size:0.85rem;">{{ c.inputs_json }}</pre>
+          <p class="meta" style="margin:0.25rem 0;">result</p>
+          <pre class="snippet" style="font-size:0.85rem;">{{ c.result_json }}</pre>
+        </details>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if u4_logic_audit.checks %}
+  <div class="u4-checks" role="region" aria-label="Checks audit">
+    <strong>Checks (deterministic — not document evidence)</strong>
+    <ul style="list-style:none;padding:0;margin:0;">
+      {% for ch in u4_logic_audit.checks %}
+      <li class="u4-check-row" style="border:1px dashed #666;margin:0.5rem 0;padding:0.5rem;background:#f5f5f5;">
+        <span class="u4-det-badge">check</span>
+        <code>{{ ch.id }}</code> · {{ ch.check_type }} · utilization {{ ch.utilization_ratio }} · status <code>{{ ch.status }}</code>
+        <br><span class="meta">node <code>{{ ch.node_id }}</code> · calculation <code>{{ ch.calculation_id }}</code></span>
+        {% if ch.message %}<br><span class="meta">{{ ch.message }}</span>{% endif %}
+        <details style="margin-top:0.35rem;">
+          <summary>Demand / capacity (persisted)</summary>
+          <pre class="snippet" style="font-size:0.85rem;">{{ ch.demand_json }}</pre>
+          <pre class="snippet" style="font-size:0.85rem;">{{ ch.capacity_json }}</pre>
+        </details>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% endif %}
+</section>

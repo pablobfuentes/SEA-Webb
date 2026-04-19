@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PDF — {{ document.title|e }} p.{{ page }}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body { background: #555; font-family: system-ui, sans-serif; display: flex; flex-direction: column; }
+    #toolbar {
+      flex-shrink: 0; background: #2c2c2c; color: #ddd;
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.35rem 0.65rem; font-size: 0.85rem; flex-wrap: wrap;
+    }
+    #toolbar strong { color: #fff; font-size: 0.9rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tb-btn {
+      background: #444; color: #eee; border: 1px solid #666; border-radius: 3px;
+      padding: 0.18rem 0.55rem; cursor: pointer; font-size: 0.82rem;
+    }
+    .tb-btn:hover:not(:disabled) { background: #555; }
+    .tb-btn:disabled { opacity: 0.4; cursor: default; }
+    #page-display { font-size: 0.85rem; white-space: nowrap; }
+    #download-link { color: #8cf; font-size: 0.82rem; white-space: nowrap; text-decoration: none; margin-left: auto; }
+    #download-link:hover { text-decoration: underline; }
+    #canvas-wrap { flex: 1; overflow: auto; text-align: center; padding: 0.5rem; min-height: 0; }
+    #pdf-canvas { box-shadow: 0 2px 10px rgba(0,0,0,0.6); background: #fff; display: block; margin: 0 auto; }
+    #msg {
+      color: #fbb; text-align: center; padding: 1.5rem 1rem; font-size: 0.9rem; line-height: 1.6;
+    }
+    #msg a { color: #8cf; }
+    #loading { color: #aaa; text-align: center; padding: 2rem; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+<div id="toolbar">
+  <strong title="{{ document.title|e }}">{{ document.title|e }}</strong>
+  <button class="tb-btn" id="btn-prev" onclick="changePage(-1)" disabled>&#9664; Prev</button>
+  <span id="page-display">p.{{ page }}</span>
+  <button class="tb-btn" id="btn-next" onclick="changePage(1)" disabled>Next &#9654;</button>
+  <a id="download-link" href="{{ file_url }}" target="_blank" rel="noopener">&#8599; Open original file</a>
+</div>
+
+<div id="canvas-wrap">
+  <p id="loading">Loading page {{ page }}…</p>
+  <canvas id="pdf-canvas" style="display:none;"></canvas>
+  <div id="msg" style="display:none;"></div>
+</div>
+
+<script>
+(function () {
+  var PDF_URL  = {{ file_url | tojson }};
+  var TARGET   = {{ page }};   // 1-based physical page from storage
+  var current  = TARGET;
+  var pdfDoc   = null;
+  var rendering = false;
+
+  function showMsg(html) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('pdf-canvas').style.display = 'none';
+    document.getElementById('msg').innerHTML = html;
+    document.getElementById('msg').style.display = 'block';
+  }
+
+  function updateControls() {
+    document.getElementById('page-display').textContent =
+      'p.' + current + (pdfDoc ? ' / ' + pdfDoc.numPages : '');
+    document.getElementById('btn-prev').disabled = (current <= 1);
+    document.getElementById('btn-next').disabled = !pdfDoc || (current >= pdfDoc.numPages);
+  }
+
+  function renderPage(n) {
+    if (!pdfDoc || rendering) return;
+    rendering = true;
+    pdfDoc.getPage(n).then(function (page) {
+      var wrap     = document.getElementById('canvas-wrap');
+      var maxW     = Math.max(wrap.clientWidth - 24, 200);
+      var vp0      = page.getViewport({ scale: 1 });
+      var scale    = Math.min(2.0, maxW / vp0.width);
+      var vp       = page.getViewport({ scale: scale });
+      var canvas   = document.getElementById('pdf-canvas');
+      var ctx      = canvas.getContext('2d');
+      canvas.width  = vp.width;
+      canvas.height = vp.height;
+      document.getElementById('loading').style.display = 'none';
+      canvas.style.display = 'block';
+      return page.render({ canvasContext: ctx, viewport: vp }).promise;
+    }).then(function () {
+      rendering = false;
+      current = n;
+      updateControls();
+    }).catch(function (err) {
+      rendering = false;
+      showMsg('Page render error: ' + err.message + '<br><a href="' + PDF_URL + '" target="_blank" rel="noopener">Open original file</a>');
+    });
+  }
+
+  window.changePage = function (delta) {
+    if (!pdfDoc || rendering) return;
+    var next = current + delta;
+    if (next < 1 || next > pdfDoc.numPages) return;
+    renderPage(next);
+  };
+
+  // Load PDF.js from CDN, then load the document
+  var script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
+  script.crossOrigin = 'anonymous';
+  script.onload = function () {
+    if (typeof pdfjsLib === 'undefined') {
+      showMsg('PDF.js did not initialise. <a href="' + PDF_URL + '" target="_blank" rel="noopener">Open original file directly.</a>');
+      return;
+    }
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+    pdfjsLib.getDocument(PDF_URL).promise
+      .then(function (pdf) {
+        pdfDoc = pdf;
+        var clampedPage = Math.max(1, Math.min(TARGET, pdf.numPages));
+        current = clampedPage;
+        updateControls();
+        renderPage(clampedPage);
+      })
+      .catch(function (err) {
+        showMsg(
+          'Could not load PDF: ' + err.message +
+          '<br><a href="' + PDF_URL + '" target="_blank" rel="noopener">Open original file directly.</a>'
+        );
+      });
+  };
+  script.onerror = function () {
+    showMsg(
+      'PDF.js library could not be loaded (network may be offline or blocked).' +
+      '<br><a href="' + PDF_URL + '" target="_blank" rel="noopener">Open original file directly.</a>'
+    );
+  };
+  document.head.appendChild(script);
+}());
+</script>
+
+</body>
+</html>

@@ -1,0 +1,14 @@
+{# Integrated case flow — cross-links preserve ?q= when the assist query is non-empty (session handoff). #}
+<nav class="case-flow-primary-nav" aria-label="Primary and secondary workbench surfaces" style="font-size:0.9rem;margin-bottom:0.75rem;">
+  <p class="meta" style="margin-bottom:0.35rem;">
+    <a href="{{ case_nav.hub }}">← Project hub</a> ·
+    <a href="{{ case_nav.chat }}">Assistant (U2)</a> ·
+    <a href="{{ case_nav.evidence }}">Evidence (U1)</a> ·
+    <a href="{{ case_nav.canvas }}">Case canvas (U5)</a> ·
+    <a href="{{ case_nav.corpus }}">Corpus</a> ·
+    <a href="{{ case_nav.workflow }}">Workflow (secondary)</a>
+  </p>
+  {% if case_nav.query_nonempty %}
+  <p class="meta" style="font-size:0.82rem;color:#444;margin:0;">Case query is carried in these links for continuity (same project session). Governed retrieval is unchanged — this is navigation only.</p>
+  {% endif %}
+</nav>

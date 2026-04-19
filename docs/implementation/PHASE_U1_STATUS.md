@@ -8,7 +8,7 @@
 |------|----------------|
 | Contract | `LocalAssistResponse.normative_retrieval_binding` (`n_a` \| `legacy_allowed_documents` \| `explicit_projection`) populated from retrieval (G4) for UI provenance. |
 | Routes | `GET /workbench/project/evidence` — form + optional `err` query; `POST /workbench/project/evidence/query` — runs `LocalAssistOrchestrator`; `GET /workbench/project/evidence/fragment/{document_id}/{fragment_id}` — full fragment text + metadata (read-only). |
-| Templates | `evidence_panel.html`, `evidence_fragment.html`; hub link to evidence panel. |
+| Templates | `evidence_panel.html`, `evidence_source_view.html` (citation source: original file + fragment); hub link to evidence panel. |
 | View helpers | `workbench/u1_evidence_display.py` — provenance headline, citation badges, governance refusal styling helper (labels only). |
 
 ## Product rules

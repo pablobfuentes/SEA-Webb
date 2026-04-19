@@ -2,7 +2,8 @@
 {% block title %}Corpus bootstrap{% endblock %}
 {% block heading %}Corpus bootstrap — upload & governed projection{% endblock %}
 {% block content %}
-<p><a href="/workbench">← Project hub</a></p>
+{% include "partials/case_flow_primary_nav.html" %}
+<p class="meta" style="font-size:0.88rem;color:#444;margin:0.5rem 0;">Corpus upload is a <strong>governance / ingestion</strong> surface (not primary Q&amp;A). For retrieval-backed answers, use chat or evidence after documents are active.</p>
 
 <p>Project <code>{{ project_id }}</code>. Workspace: <code>{{ workspace_path }}</code></p>
 

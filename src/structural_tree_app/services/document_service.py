@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import shutil
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
@@ -41,6 +42,20 @@ def _sha256_file(path: Path) -> str:
         for chunk in iter(lambda: f.read(65536), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def verify_document_file_bytes(doc: Document) -> bool:
+    """True if ``doc.file_path`` exists on disk and matches ``doc.content_hash`` (safe to serve)."""
+    try:
+        p = Path(doc.file_path)
+    except (TypeError, ValueError):
+        return False
+    if not p.is_file():
+        return False
+    try:
+        return _sha256_file(p) == doc.content_hash
+    except OSError:
+        return False
 
 
 def _sha256_utf8(text: str) -> str:
@@ -336,6 +351,17 @@ class DocumentIngestionService:
             discipline=discipline,
             standard_family=standard_family,
         )
+
+        # Persist a durable copy for original-source viewing (upload paths may be temporary).
+        try:
+            doc_dir = self._base / doc.id
+            doc_dir.mkdir(parents=True, exist_ok=True)
+            ext = path.suffix.lower() or ".bin"
+            dest = doc_dir / f"original{ext}"
+            shutil.copy2(path, dest)
+            doc.file_path = str(dest.resolve())
+        except OSError:
+            pass
 
         chunks = _segment_text(normalized)
         fragments: list[DocumentFragment] = []

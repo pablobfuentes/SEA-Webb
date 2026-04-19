@@ -45,9 +45,13 @@
 {% endmacro %}
 
 {% block title %}Simple-span workflow{% endblock %}
-{% block heading %}Simple-span steel workflow (M3–M4 + M5 + M6 comparison / revision){% endblock %}
+{% block heading %}Simple-span steel workflow — secondary trace (M3–M4 + M5 + M6){% endblock %}
 {% block content %}
-<p><a href="/workbench">← Project hub</a></p>
+{% include "partials/case_flow_primary_nav.html" %}
+<p class="u6-workflow-framing" style="font-size:0.9rem;border-left:4px solid #666;padding:0.5rem 0.65rem;margin:0.75rem 0;background:#fafafa;">
+  <strong>Secondary surface.</strong> Inspect persisted tree branches, alternatives, materialized working paths, deterministic M5 preliminary outputs, branch comparison, and revision snapshots. This is not the primary assistant — for governed citations use
+  <a href="{{ case_nav.chat }}">chat</a> or <a href="{{ case_nav.evidence }}">evidence</a>; for the reasoning-bridge case board use <a href="{{ case_nav.canvas }}">canvas</a>. Links preserve your last assist query when available (same session).
+</p>
 
 <section>
   <h2 style="font-size:1rem;">Context</h2>

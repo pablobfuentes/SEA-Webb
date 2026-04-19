@@ -5,6 +5,177 @@ All notable changes to the **structural_tree_app_foundation** repository are doc
 
 ## [Unreleased]
 
+### Integrated case flow hardening (session + URL query continuity)
+
+**Added**
+
+- `workbench/case_flow_handoff.py` — thin helpers for `?q=` / session last-assist query, project bind/invalidate, and `case_nav` link map for primary + secondary surfaces.
+- `workbench/templates/partials/case_flow_primary_nav.html` — shared nav across chat, evidence, canvas, corpus, workflow (secondary) with optional `q` handoff and short continuity disclaimer.
+- `docs/implementation/PHASE_INTEGRATED_CASE_FLOW_STATUS.md`.
+
+**Changed**
+
+- `workbench/deps.py` — `SESSION_LAST_ASSIST_QUERY_KEY` for last successful assist query string.
+- `workbench/pages.py`, `workbench/corpus_pages.py` — GET prefill on chat/evidence/canvas; POST assist stores last query; project create/open/close use `bind_new_session_project` / `invalidate_session_project`; workflow and evidence views pass `case_nav`.
+- Templates: `chat_shell.html`, `evidence_panel.html`, `canvas_u5.html`, `corpus_bootstrap.html`, `evidence_source_view.html`, `simple_span_workflow.html`, `partials/u6_secondary_to_workflow.html` — integrated nav + handoff-aware links.
+
+**Tests**
+
+- `tests/test_integrated_case_flow.py` — continuity, override, workflow return path with `q`, project switch clears handoff, no-session redirects, helper unit checks.
+- `tests/test_workbench_u6.py` — assert `case-flow-primary-nav` where workflow/corpus expose the shared nav.
+
+### Evidence viewer — PDF.js iframe (reliable page-accurate in-app viewer)
+
+**Added**
+
+- `workbench/templates/evidence_pdf_viewer.html` — standalone HTML page using **PDF.js 3.11.174** (jsDelivr CDN). Renders the PDF to canvas at the exact physical page; prev/next navigation; CDN-failure fallback with direct-download link.
+- Route `GET /workbench/project/evidence/source/{document_id}/viewer?page=N` — validates session + project + document + file integrity, then serves `evidence_pdf_viewer.html`. PDF.js fetches the file via the same-origin `/file` route (session cookie included automatically).
+
+**Changed**
+
+- `evidence_source_view.py` — adds `pdf_viewer_url` (`/viewer?page=N`) alongside the existing `pdf_open_url` (`/file#page=N`).
+- `evidence_source_view.html` — PDF panel now uses a proper `<iframe src="{{ pdf_viewer_url }}">` (PDF.js, reliable) as the **primary** embed; "Open in new tab" fallback link retained; `<object>` removed.
+- Iframe uses `sandbox="allow-scripts allow-same-origin"` to keep the viewer contained.
+
+**Tests**
+
+- `test_pdf_viewer_route_returns_html` — viewer route returns 200 HTML with PDF.js reference at correct page.
+- `test_pdf_viewer_route_404_for_unknown_doc` — 404 on bad document ID.
+- `test_pdf_viewer_route_requires_session` — 303 redirect without session.
+- `test_evidence_source_view_embeds_viewer_iframe` — fragment detail page uses `<iframe … /viewer?page=…>`.
+- `test_pdf_viewer_url_in_context` — `build_evidence_source_view_context` produces correct `pdf_viewer_url` and `pdf_open_url`.
+
+### Evidence viewer hardening — PDF page alignment & embed fallback
+
+**Changed**
+
+- `workbench/evidence_pdf_pages.py` — documents **1-based physical page** storage vs **PDF Open Parameters** `#page=` (same integer; no silent offset).
+- `evidence_source_view.html` — **primary** “Open PDF at cited page (new tab)” with full `pdf_open_url`; optional **collapsed** inline `<object>` preview; copy explains many browsers ignore `#page=` in embeds; physical vs printed page disclaimer.
+- `evidence_source_view.py` — `pdf_open_url`, `pdf_viewer_target_page_1based`, `page_semantics_note`; clearer precision strings.
+
+**Tests**
+
+- `tests/test_evidence_pdf_pages.py`; extra cases in `tests/test_evidence_original_source_viewer.py`.
+
+### Evidence UX — original source viewer (citation hardening)
+
+**Added**
+
+- `GET /workbench/project/evidence/source/{document_id}/file` — serves **verified** original bytes (`content_hash` match) for PDF/text embedding; `404` when missing or tampered.
+- `workbench/evidence_source_view.py` — `build_evidence_source_view_context`: modes `pdf_side_by_side`, `text_side_by_side`, `fragment_only`; explicit **location precision** (`exact_page` / `page_range` / `unknown_page`) and **no fake coordinate highlight** (excerpt = stored fragment text).
+- Template `evidence_source_view.html` — side-by-side original file iframe + cited fragment; honest fallbacks and hash ids for audit.
+
+**Changed**
+
+- `DocumentIngestionService.ingest_local_file` — copies source into `workspace/.../documents/{doc_id}/original{ext}` so paths remain valid after temp uploads.
+- `document_service.verify_document_file_bytes` — helper for safe file serving.
+- Citation links (evidence panel, chat, canvas U5): label **Open citation source view**; same `/evidence/fragment/...` URLs preserved.
+
+**Tests**
+
+- `tests/test_evidence_original_source_viewer.py`; `tests/fixtures/sample_text.pdf` (two-page text PDF for ingest + page mapping).
+- Adjusted U1/U2 assertions for new link label.
+
+### Phase U6 — Secondary tree/workflow integration (primary surfaces unchanged)
+
+**Added**
+
+- `workbench/templates/partials/u6_secondary_to_workflow.html` — strip on chat, evidence, canvas linking to `/workbench/project/workflow` with explicit “secondary trace” framing.
+- `workbench/templates/partials/u6_primary_surfaces_nav.html` — return nav on workflow and corpus pages to chat, evidence, canvas, hub.
+- Workflow page heading/framing: positions simple-span surface as **secondary trace**; corpus page notes governance vs Q&amp;A.
+
+**Changed**
+
+- `chat_shell.html`, `evidence_panel.html`, `canvas_u5.html` — include U6 secondary strip; workflow nav link labeled “(secondary)”.
+- `simple_span_workflow.html` — primary-surfaces nav + secondary-surface copy at top.
+- `workbench_hub.html` — session section splits **Primary surfaces** vs **Secondary — trace &amp; workflow**.
+
+**Tests**
+
+- `tests/test_workbench_u6.py`; `docs/implementation/PHASE_U6_STATUS.md`.
+
+### Phase U5 — Visual case canvas (reasoning-bridge board)
+
+**Added**
+
+- `workbench/u5_canvas_view.py` — `u5_canvas_board_from_result`, `evidence_fragment_href` (thin mapping for Jinja).
+- `GET /workbench/project/canvas` — optional `q`; runs `ReasoningBridgeService.analyze` when `q` non-empty; renders `canvas_u5.html`.
+- Chat, evidence, and project hub navigation to the canvas; `u5_canvas_href` in `_u1_template_context` when query text is present.
+
+**Tests**
+
+- `tests/test_workbench_u5.py`; `docs/implementation/PHASE_U5_STATUS.md`.
+
+### Phase R2B — Reasoning / formula-selection bridge (pre–U5)
+
+**Added**
+
+- `domain/reasoning_bridge_contract.py` — `ReasoningBridgeRequest`, `ReasoningBridgeResult`, `ProblemInterpretation`, `EvidenceAnchor`, `CandidateProcessStep`, `CandidateFormulaOrCheck`, `SupportedExecutionStep`, `UnsupportedReasoningGap` (explicit authority / capability boundaries).
+- `domain/reasoning_bridge_codec.py` — deterministic `reasoning_bridge_result_to_dict` / `from_dict`, `reasoning_bridge_request_to_dict`.
+- `services/reasoning_bridge_service.py` — `ReasoningBridgeService.analyze`: governed `DocumentRetrievalService.search` + optional G5 derived bundle + deterministic tree scan; narrow keyword map for simple-span steel vertical slice; does **not** modify `LocalAssistOrchestrator`.
+- `schemas/reasoning_bridge_result.schema.json`; `validate_reasoning_bridge_result_payload` in `validation/json_schema.py`.
+
+**Tests**
+
+- `tests/test_reasoning_bridge_r2b.py`; `docs/implementation/PHASE_R2B_STATUS.md`.
+
+### Phase G5 — Derived knowledge layer (subordinate; pre–U5)
+
+**Added**
+
+- `domain/derived_knowledge_models.py`, `domain/derived_knowledge_codec.py` — versioned `DerivedKnowledgeBundle` with document/topic digests, navigation hints, formula/check registry (non-authoritative), governance signals; `SourceAnchorRef` links every derived row to `document_id` + `fragment_id` + content hashes.
+- `schemas/derived_knowledge_bundle.schema.json` — JSON Schema for persisted bundles.
+- `storage/derived_knowledge_store.py` — `{project_id}/derived_knowledge/bundle.json` with validation.
+- `services/derived_knowledge_service.py` — deterministic `regenerate(project_id)`; content fingerprint for idempotent no-op; mirrors governed normative corpus selection (legacy allowed list vs explicit projection); preserves conflict/disposition signals without flattening.
+- `validation/json_schema.py` — `validate_derived_knowledge_bundle_payload`.
+
+**Tests**
+
+- `tests/test_derived_knowledge_g5.py`; `docs/implementation/PHASE_G5_DERIVED_KNOWLEDGE_STATUS.md`.
+
+**Notes**
+
+- Does not wire derived artifacts into retrieval or `LocalAssistOrchestrator` (behavior unchanged by default). Consumed read-only by R2B and U5 canvas (see Phase U5).
+
+### Phase U4 — Logic & audit panel (chat / evidence)
+
+**Added**
+
+- `workbench/u4_logic_audit.py` — `load_project_logic_audit_snapshot`: assumptions (project log), calculations and checks (tree store), M5 preliminary boundary + shared disclaimer string.
+- `workbench/templates/partials/u4_logic_audit_panel.html` — sections for assumptions, deterministic calculations, checks; empty state; link to workflow; `u4-det-badge` / `preliminary M5` styling (not citation authority).
+- Chat and evidence templates include U4 panel after assist output; `_u1_template_context` takes `ProjectService` and injects `u4_logic_audit`.
+
+**Tests**
+
+- `tests/test_workbench_u4.py`; `docs/implementation/PHASE_U4_STATUS.md`.
+
+### U3 workbench UX — synthesis control always visible
+
+**Changed**
+
+- Chat and evidence query forms always include the U3 “Local answer synthesis” block: checkbox disabled (no submit name) when `STRUCTURAL_LOCAL_MODEL_ENABLED` is off, with copy to enable it; when on, checkbox is enabled with helper text for unchecked vs checked behavior (bounded `answer_text` only).
+- Template partial `workbench/templates/partials/u3_synthesis_control.html`; duplicate status lines removed from `chat_shell.html` / `evidence_panel.html`.
+
+**Tests**
+
+- `tests/test_workbench_u3.py` — visibility, disabled/enabled states, POST passthrough, assist rendering unchanged.
+
+### Phase U3 — Local model synthesis boundary (optional; subordinate to retrieval)
+
+**Added**
+
+- `services/local_model_config.py` — `STRUCTURAL_LOCAL_MODEL_ENABLED`, `STRUCTURAL_LOCAL_MODEL_PROVIDER` (`stub` | `unavailable`).
+- `services/local_model_synthesis.py` — `LocalModelSynthesisPort`, deterministic `StubLocalModelSynthesizer`, `UnavailableLocalModelSynthesizer`.
+- `LocalAssistOrchestrator` optional U3 step: replaces **only** `answer_text` when runtime enabled **and** `LocalAssistQuery.request_local_model_synthesis`; `response_authority_summary` may become `local_model_synthesis_bounded`; warnings disclose model restatement.
+- `LocalAssistQuery.request_local_model_synthesis`; `ResponseAuthoritySummary.local_model_synthesis_bounded`.
+- Workbench: U3 status + checkbox on chat and evidence forms.
+- `tests/test_local_assist_u3.py`, `tests/test_workbench_u3.py`; `docs/implementation/PHASE_U3_STATUS.md`; deferred PDF viewer note: `docs/implementation/DEFERRED_EVIDENCE_UX.md`.
+
+**Changed**
+
+- `workbench/u1_evidence_display.py` — label for `local_model_synthesis_bounded`.
+- `docs/TEST_STRATEGY.md` — U3 pointers; `README.md` — env vars for U3.
+
 ### Phase U2 — Chat-first workbench shell
 
 **Added**

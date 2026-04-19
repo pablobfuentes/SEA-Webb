@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from urllib.parse import quote
 
-from fastapi import APIRouter, Form, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Form, HTTPException, Query, Request
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from structural_tree_app.services.branch_comparison import BranchComparisonError, BranchComparisonService
@@ -25,7 +26,15 @@ from structural_tree_app.services.tree_workspace import TreeWorkspace, TreeWorks
 from structural_tree_app.domain.characterization_provenance import ALL_CHARACTERIZATION_PROVENANCES
 from structural_tree_app.storage.tree_store import TreeStore
 from structural_tree_app.workbench.config import ENV_SESSION_SECRET, ENV_WORKSPACE, get_templates_dir, get_workspace_path
-from structural_tree_app.workbench.deps import SESSION_PROJECT_KEY, ProjectServiceDep, SessionProjectIdDep
+from structural_tree_app.workbench.case_flow_handoff import (
+    bind_new_session_project,
+    build_case_nav,
+    invalidate_session_project,
+    resolve_prefill_query,
+    store_last_assist_query,
+    sync_session_query_from_explicit_url,
+)
+from structural_tree_app.workbench.deps import ProjectServiceDep, SessionProjectIdDep
 from structural_tree_app.workbench.form_parsing import simple_span_input_from_form
 from structural_tree_app.workbench.m5_workbench_view import (
     assumption_to_display_dict,
@@ -43,7 +52,8 @@ from structural_tree_app.workbench.m6_workbench_view import (
 )
 from structural_tree_app.workbench.workflow_summary import load_simple_span_workbench_snapshot
 from structural_tree_app.domain.local_assist_contract import LocalAssistQuery
-from structural_tree_app.services.document_service import DocumentIngestionService
+from structural_tree_app.services.document_service import DocumentIngestionService, verify_document_file_bytes
+from structural_tree_app.services.local_model_config import load_local_model_runtime_config
 from structural_tree_app.services.local_assist_orchestrator import LocalAssistOrchestrator
 from structural_tree_app.workbench.u1_evidence_display import (
     u1_citation_row_badge,
@@ -52,12 +62,18 @@ from structural_tree_app.workbench.u1_evidence_display import (
     u1_response_authority_summary_label,
     u1_retrieval_provenance_headline,
 )
+from structural_tree_app.workbench.u4_logic_audit import load_project_logic_audit_snapshot
+from structural_tree_app.workbench.evidence_source_view import build_evidence_source_view_context
+from structural_tree_app.workbench.u5_canvas_view import u5_canvas_board_from_result
+from structural_tree_app.domain.reasoning_bridge_contract import ReasoningBridgeRequest
+from structural_tree_app.services.reasoning_bridge_service import ReasoningBridgeService
 
 router = APIRouter(tags=["ui"])
 _templates = Jinja2Templates(directory=str(get_templates_dir()))
 
 
 def _u1_template_context(
+    ps: ProjectService,
     session_pid: str,
     *,
     assist: object,
@@ -68,23 +84,33 @@ def _u1_template_context(
     form_inc_asm: bool,
     form_inc_hooks: bool,
     form_match_fam: bool,
+    form_synth: bool = False,
 ) -> dict[str, object]:
     """Shared Jinja context for U1 evidence panel and U2 chat shell (same orchestrator output)."""
+    cfg = load_local_model_runtime_config()
+    fq = (form_query or "").strip()
+    u5_canvas_href = f"/workbench/project/canvas?q={quote(fq)}" if fq else "/workbench/project/canvas"
     return {
         "assist": assist,
         "err": err,
         "project_id": session_pid,
         "form_query": form_query,
+        "case_nav": build_case_nav(form_query or ""),
         "form_mode": form_mode,
         "form_limit": form_limit,
         "form_inc_asm": form_inc_asm,
         "form_inc_hooks": form_inc_hooks,
         "form_match_fam": form_match_fam,
+        "form_synth": form_synth,
+        "u3_local_model_enabled_globally": cfg.enabled,
+        "u3_local_model_provider": cfg.provider,
         "u1_provenance": u1_retrieval_provenance_headline,
         "u1_cite_badge": u1_citation_row_badge,
         "u1_summary_label": u1_response_authority_summary_label,
         "u1_gov_refusal": u1_refusal_is_governance_block,
         "u1_readiness_hint": lambda a, pid=session_pid: u1_readiness_hint_html(a, pid),
+        "u4_logic_audit": load_project_logic_audit_snapshot(ps, session_pid),
+        "u5_canvas_href": u5_canvas_href,
     }
 
 
@@ -98,8 +124,9 @@ def _local_assist_run(
     include_project_assumptions: str | None,
     include_deterministic_hooks: str | None,
     match_project_primary_standard_family: str | None,
-) -> tuple[object, str, int, bool, bool, bool]:
-    """Run ``LocalAssistOrchestrator`` with the same form semantics as U1/U2."""
+    request_local_model_synthesis: str | None = None,
+) -> tuple[object, str, int, bool, bool, bool, bool]:
+    """Run ``LocalAssistOrchestrator`` with the same form semantics as U1/U2/U3."""
     mode = citation_authority.strip()
     if mode not in ("normative_active_primary", "approved_ingested"):
         mode = "normative_active_primary"
@@ -107,6 +134,7 @@ def _local_assist_run(
     inc_asm = include_project_assumptions == "1"
     inc_hooks = include_deterministic_hooks == "1"
     match_fam = match_project_primary_standard_family == "1"
+    req_synth = request_local_model_synthesis == "1"
     q = LocalAssistQuery(
         project_id=session_pid,
         retrieval_query_text=retrieval_query_text,
@@ -115,9 +143,10 @@ def _local_assist_run(
         include_project_assumptions=inc_asm,
         include_deterministic_hooks=inc_hooks,
         match_project_primary_standard_family=match_fam,
+        request_local_model_synthesis=req_synth,
     )
     assist = LocalAssistOrchestrator(ps).run(q)
-    return assist, mode, lim, inc_asm, inc_hooks, match_fam
+    return assist, mode, lim, inc_asm, inc_hooks, match_fam, req_synth
 
 
 def _redirect_workbench(msg: str | None = None, err: str | None = None) -> RedirectResponse:
@@ -159,7 +188,7 @@ def workbench_hub(
         try:
             current_name = ps.load_project(session_pid).name
         except ProjectPersistenceError:
-            request.session.pop(SESSION_PROJECT_KEY, None)
+            invalidate_session_project(request)
     ws = get_workspace_path()
     return _templates.TemplateResponse(
         request,
@@ -196,7 +225,7 @@ def project_create(
         unit_system=unit_system.strip() or "SI",
         primary_standard_family=primary_standard_family.strip() or "AISC",
     )
-    request.session[SESSION_PROJECT_KEY] = p.id
+    bind_new_session_project(request, p.id)
     return _redirect_workbench(msg=f"Created project {p.id}")
 
 
@@ -213,13 +242,13 @@ def project_open(
         ps.load_project(pid)
     except ProjectPersistenceError as e:
         return _redirect_workbench(err=str(e))
-    request.session[SESSION_PROJECT_KEY] = pid
+    bind_new_session_project(request, pid)
     return _redirect_workbench(msg=f"Opened project {pid}")
 
 
 @router.post("/workbench/project/close")
 def project_close(request: Request) -> RedirectResponse:
-    request.session.pop(SESSION_PROJECT_KEY, None)
+    invalidate_session_project(request)
     return _redirect_workbench(msg="Closed project (session pointer cleared)")
 
 
@@ -242,7 +271,7 @@ def workflow_simple_span_page(
     try:
         project = ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return _redirect_workbench(err=str(e))
 
     snapshot = load_simple_span_workbench_snapshot(ps, project.id)
@@ -304,6 +333,8 @@ def workflow_simple_span_page(
         revision_id=revision_view_id,
     )
 
+    last_q = resolve_prefill_query(request, None)
+
     return _templates.TemplateResponse(
         request,
         "simple_span_workflow.html",
@@ -315,6 +346,7 @@ def workflow_simple_span_page(
             "snapshot": snapshot,
             "msg": msg,
             "err": err,
+            "case_nav": build_case_nav(last_q),
             "provenance_legend": provenance_legend,
             "materialized_branches": materialized_branches,
             "m5_method_label": M5_METHOD_LABEL,
@@ -342,7 +374,7 @@ async def workflow_simple_span_submit(
     try:
         project = ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return _redirect_workbench(err=str(e))
 
     if project.root_node_id is not None:
@@ -377,7 +409,7 @@ def workflow_materialize_branch(
     try:
         project = ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return _redirect_workbench(err=str(e))
     snapshot = load_simple_span_workbench_snapshot(ps, project.id)
     if not snapshot:
@@ -405,7 +437,7 @@ def workflow_m5_run(
     try:
         project = ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return _redirect_workbench(err=str(e))
     inp = load_simple_span_workflow_input(ps, project.id)
     if inp is None:
@@ -446,7 +478,7 @@ async def workflow_m6_compare(
     try:
         project = ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return _redirect_workbench(err=str(e))
 
     form = await request.form()
@@ -488,7 +520,7 @@ def workflow_revision_create(
     try:
         project = ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return _redirect_workbench(err=str(e))
 
     text = rationale.strip() or "Workbench snapshot"
@@ -510,6 +542,7 @@ def evidence_panel_get(
     ps: ProjectServiceDep,
     session_pid: SessionProjectIdDep,
     err: str | None = Query(None),
+    q: str | None = Query(None),
 ) -> HTMLResponse | RedirectResponse:
     """U1 — evidence panel form (session project required)."""
     if not session_pid:
@@ -517,16 +550,19 @@ def evidence_panel_get(
     try:
         ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return _redirect_workbench(err=str(e))
+    fq = resolve_prefill_query(request, q)
+    sync_session_query_from_explicit_url(request, q)
     return _templates.TemplateResponse(
         request,
         "evidence_panel.html",
         _u1_template_context(
+            ps,
             session_pid,
             assist=None,
             err=err,
-            form_query="",
+            form_query=fq,
             form_mode="normative_active_primary",
             form_limit=20,
             form_inc_asm=True,
@@ -551,6 +587,7 @@ def evidence_panel_query(
     include_project_assumptions: str | None = Form(None),
     include_deterministic_hooks: str | None = Form(None),
     match_project_primary_standard_family: str | None = Form(None),
+    request_local_model_synthesis: str | None = Form(None),
 ) -> HTMLResponse | RedirectResponse:
     """U1 — run LocalAssistOrchestrator and render structured response."""
     if not session_pid:
@@ -558,10 +595,10 @@ def evidence_panel_query(
     try:
         ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return _redirect_workbench(err=str(e))
 
-    assist, mode, lim, inc_asm, inc_hooks, match_fam = _local_assist_run(
+    assist, mode, lim, inc_asm, inc_hooks, match_fam, req_synth = _local_assist_run(
         ps,
         session_pid,
         retrieval_query_text=retrieval_query_text,
@@ -570,12 +607,15 @@ def evidence_panel_query(
         include_project_assumptions=include_project_assumptions,
         include_deterministic_hooks=include_deterministic_hooks,
         match_project_primary_standard_family=match_project_primary_standard_family,
+        request_local_model_synthesis=request_local_model_synthesis,
     )
+    store_last_assist_query(request, retrieval_query_text)
 
     return _templates.TemplateResponse(
         request,
         "evidence_panel.html",
         _u1_template_context(
+            ps,
             session_pid,
             assist=assist,
             err=None,
@@ -585,6 +625,7 @@ def evidence_panel_query(
             form_inc_asm=inc_asm,
             form_inc_hooks=inc_hooks,
             form_match_fam=match_fam,
+            form_synth=req_synth,
         ),
     )
 
@@ -599,6 +640,7 @@ def chat_shell_get(
     ps: ProjectServiceDep,
     session_pid: SessionProjectIdDep,
     err: str | None = Query(None),
+    q: str | None = Query(None),
 ) -> HTMLResponse | RedirectResponse:
     """U2 — primary chat shell (same LocalAssistOrchestrator as U1 evidence)."""
     if not session_pid:
@@ -606,16 +648,19 @@ def chat_shell_get(
     try:
         ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return _redirect_workbench(err=str(e))
+    fq = resolve_prefill_query(request, q)
+    sync_session_query_from_explicit_url(request, q)
     return _templates.TemplateResponse(
         request,
         "chat_shell.html",
         _u1_template_context(
+            ps,
             session_pid,
             assist=None,
             err=err,
-            form_query="",
+            form_query=fq,
             form_mode="normative_active_primary",
             form_limit=20,
             form_inc_asm=True,
@@ -640,6 +685,7 @@ def chat_shell_query(
     include_project_assumptions: str | None = Form(None),
     include_deterministic_hooks: str | None = Form(None),
     match_project_primary_standard_family: str | None = Form(None),
+    request_local_model_synthesis: str | None = Form(None),
 ) -> HTMLResponse | RedirectResponse:
     """U2 — submit question through chat shell; thin wrapper over LocalAssistOrchestrator."""
     if not session_pid:
@@ -647,10 +693,10 @@ def chat_shell_query(
     try:
         ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return _redirect_workbench(err=str(e))
 
-    assist, mode, lim, inc_asm, inc_hooks, match_fam = _local_assist_run(
+    assist, mode, lim, inc_asm, inc_hooks, match_fam, req_synth = _local_assist_run(
         ps,
         session_pid,
         retrieval_query_text=retrieval_query_text,
@@ -659,12 +705,15 @@ def chat_shell_query(
         include_project_assumptions=include_project_assumptions,
         include_deterministic_hooks=include_deterministic_hooks,
         match_project_primary_standard_family=match_project_primary_standard_family,
+        request_local_model_synthesis=request_local_model_synthesis,
     )
+    store_last_assist_query(request, retrieval_query_text)
 
     return _templates.TemplateResponse(
         request,
         "chat_shell.html",
         _u1_template_context(
+            ps,
             session_pid,
             assist=assist,
             err=None,
@@ -674,8 +723,136 @@ def chat_shell_query(
             form_inc_asm=inc_asm,
             form_inc_hooks=inc_hooks,
             form_match_fam=match_fam,
+            form_synth=req_synth,
         ),
     )
+
+
+@router.get(
+    "/workbench/project/canvas",
+    response_class=HTMLResponse,
+    response_model=None,
+)
+def canvas_u5_get(
+    request: Request,
+    ps: ProjectServiceDep,
+    session_pid: SessionProjectIdDep,
+    q: str | None = Query(None),
+    err: str | None = Query(None),
+) -> HTMLResponse | RedirectResponse:
+    """U5 — visual / formula-selection board for the current case (``q``); reuses ``ReasoningBridgeService``."""
+    if not session_pid:
+        return _redirect_workbench(err="Select or create a project first (project hub).")
+    try:
+        ps.load_project(session_pid)
+    except ProjectPersistenceError as e:
+        invalidate_session_project(request)
+        return _redirect_workbench(err=str(e))
+
+    query_text = resolve_prefill_query(request, q)
+    sync_session_query_from_explicit_url(request, q)
+    bridge_board = None
+    bridge_result = None
+    if query_text.strip():
+        bridge_result = ReasoningBridgeService(ps).analyze(
+            ReasoningBridgeRequest(
+                project_id=session_pid,
+                query_text=query_text,
+                citation_authority="normative_active_primary",
+                retrieval_limit=20,
+                match_project_primary_standard_family=True,
+                include_deterministic_context=True,
+            )
+        )
+        bridge_board = u5_canvas_board_from_result(bridge_result)
+
+    return _templates.TemplateResponse(
+        request,
+        "canvas_u5.html",
+        {
+            "project_id": session_pid,
+            "query_text": query_text,
+            "err": err,
+            "bridge_board": bridge_board,
+            "bridge_result": bridge_result,
+            "u4_logic_audit": load_project_logic_audit_snapshot(ps, session_pid),
+            "case_nav": build_case_nav(query_text),
+        },
+    )
+
+
+@router.get(
+    "/workbench/project/evidence/source/{document_id}/viewer",
+    response_class=HTMLResponse,
+    response_model=None,
+)
+def evidence_pdf_viewer(
+    request: Request,
+    ps: ProjectServiceDep,
+    session_pid: SessionProjectIdDep,
+    document_id: str,
+    page: int = Query(default=1, ge=1),
+) -> HTMLResponse | RedirectResponse:
+    """PDF.js viewer for a verified source document at the specified physical page."""
+    if not session_pid:
+        return _redirect_workbench(err="Select or create a project first.")
+    try:
+        ps.load_project(session_pid)
+    except ProjectPersistenceError as e:
+        invalidate_session_project(request)
+        return _redirect_workbench(err=str(e))
+
+    ing = DocumentIngestionService(ps, session_pid)
+    try:
+        doc = ing.load_document(document_id)
+    except ProjectPersistenceError:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if not verify_document_file_bytes(doc):
+        raise HTTPException(status_code=404, detail="Source file unavailable or integrity check failed.")
+    return _templates.TemplateResponse(
+        request,
+        "evidence_pdf_viewer.html",
+        {
+            "document": doc,
+            "file_url": f"/workbench/project/evidence/source/{document_id}/file",
+            "page": page,
+        },
+    )
+
+
+@router.get(
+    "/workbench/project/evidence/source/{document_id}/file",
+    response_model=None,
+)
+def evidence_source_file(
+    request: Request,
+    ps: ProjectServiceDep,
+    session_pid: SessionProjectIdDep,
+    document_id: str,
+) -> FileResponse | RedirectResponse:
+    """Serve verified original bytes for citation source embedding (hash-checked)."""
+    if not session_pid:
+        return _redirect_workbench(err="Select or create a project first.")
+    try:
+        ps.load_project(session_pid)
+    except ProjectPersistenceError as e:
+        invalidate_session_project(request)
+        return _redirect_workbench(err=str(e))
+
+    ing = DocumentIngestionService(ps, session_pid)
+    try:
+        doc = ing.load_document(document_id)
+    except ProjectPersistenceError:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if not verify_document_file_bytes(doc):
+        raise HTTPException(status_code=404, detail="Source file unavailable or integrity check failed.")
+    path = Path(doc.file_path)
+    suffix = path.suffix.lower()
+    media = {
+        ".pdf": "application/pdf",
+        ".txt": "text/plain; charset=utf-8",
+    }.get(suffix, "application/octet-stream")
+    return FileResponse(path, media_type=media, filename=f"source{suffix}")
 
 
 @router.get(
@@ -690,13 +867,13 @@ def evidence_fragment_detail(
     document_id: str,
     fragment_id: str,
 ) -> HTMLResponse | RedirectResponse:
-    """U1 — load cited fragment text from local project corpus (read-only)."""
+    """U1 — citation source view: original file context + governed fragment text (read-only)."""
     if not session_pid:
         return _redirect_workbench(err="Select or create a project first.")
     try:
         ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return _redirect_workbench(err=str(e))
 
     ing = DocumentIngestionService(ps, session_pid)
@@ -705,8 +882,14 @@ def evidence_fragment_detail(
     except ProjectPersistenceError:
         return _templates.TemplateResponse(
             request,
-            "evidence_fragment.html",
-            {"document": None, "fragment": None, "error": f"Document not found: {document_id}"},
+            "evidence_source_view.html",
+            {
+                "document": None,
+                "fragment": None,
+                "error": f"Document not found: {document_id}",
+                "source": None,
+                "case_nav": build_case_nav(resolve_prefill_query(request, None)),
+            },
         )
     frag = None
     for f in ing.load_fragments(document_id):
@@ -716,11 +899,23 @@ def evidence_fragment_detail(
     if frag is None:
         return _templates.TemplateResponse(
             request,
-            "evidence_fragment.html",
-            {"document": doc, "fragment": None, "error": f"Fragment not found: {fragment_id}"},
+            "evidence_source_view.html",
+            {
+                "document": doc,
+                "fragment": None,
+                "error": f"Fragment not found: {fragment_id}",
+                "source": None,
+                "case_nav": build_case_nav(resolve_prefill_query(request, None)),
+            },
         )
     return _templates.TemplateResponse(
         request,
-        "evidence_fragment.html",
-        {"document": doc, "fragment": frag, "error": None},
+        "evidence_source_view.html",
+        {
+            "document": doc,
+            "fragment": frag,
+            "error": None,
+            "source": build_evidence_source_view_context(doc, frag),
+            "case_nav": build_case_nav(resolve_prefill_query(request, None)),
+        },
     )

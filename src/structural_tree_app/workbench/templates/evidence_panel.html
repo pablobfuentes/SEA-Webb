@@ -17,12 +17,17 @@
 .evidence-panel .badge.auth { background: #e0f0ff; border: 1px solid #069; }
 .evidence-panel .badge.sup { background: #eef6ee; border: 1px solid #363; }
 .evidence-panel .readiness-hint { border-left: 4px solid #069; padding: 0.45rem 0.6rem; background: #f0f8ff; margin: 0.75rem 0; font-size: 0.92rem; }
+.evidence-panel .u3-synthesis-control { border: 1px solid #ccc; padding: 0.6rem 0.65rem; margin: 0.5rem 0 0; background: #fafafa; border-radius: 2px; }
+.evidence-panel .u4-logic-audit .u4-det-badge { font-size: 0.72rem; padding: 0.08rem 0.35rem; border-radius: 2px; background: #e8e8e8; border: 1px solid #666; margin-right: 0.35rem; }
+.evidence-panel .u4-logic-audit .u4-prelim-badge { font-size: 0.72rem; padding: 0.08rem 0.35rem; border-radius: 2px; background: #fff8e6; border: 1px solid #a60; margin-right: 0.35rem; }
+.evidence-panel .u4-deterministic { margin-top: 0.75rem; }
 {% endblock %}
 {% block content %}
 <section class="evidence-panel" aria-labelledby="u1-h">
-  <p class="meta"><a href="/workbench">← Project hub</a> · <a href="/workbench/project/chat">Assistant (U2)</a> · <a href="/workbench/project/workflow">Workflow</a></p>
+  {% include "partials/case_flow_primary_nav.html" %}
+  {% include "partials/u6_secondary_to_workflow.html" %}
   <h2 id="u1-h" style="font-size:1rem;">Structured retrieval preview (same engine as chat)</h2>
-  <p class="meta">This panel surfaces <code>LocalAssistResponse</code> from <code>LocalAssistOrchestrator</code> only. Retrieval remains the authority gate.</p>
+  <p class="meta">This panel surfaces <code>LocalAssistResponse</code> from <code>LocalAssistOrchestrator</code> only. Retrieval remains the authority gate. Optional U3 restatement is configured in the form below.</p>
 
   {% if err %}<p role="alert" style="color:#600;"><strong>Error:</strong> {{ err }}</p>{% endif %}
 
@@ -41,6 +46,9 @@
       <label><input type="checkbox" name="include_deterministic_hooks" value="1" {% if form_inc_hooks %}checked{% endif %}> Include deterministic hooks (M5 / calc — not citations)</label><br>
       <label><input type="checkbox" name="match_project_primary_standard_family" value="1" {% if form_match_fam %}checked{% endif %}> Match project primary standard family (normative mode)</label>
     </p>
+    {% with u3_checkbox_id="u3-req-synth-evidence" %}
+    {% include "partials/u3_synthesis_control.html" %}
+    {% endwith %}
     <p><label>Limit <input name="retrieval_limit" type="number" min="1" max="100" value="{{ form_limit or 20 }}" style="width:4rem;"></label></p>
     <p><button type="submit">Run local assist</button></p>
   </form>
@@ -48,5 +56,7 @@
   {% if assist %}
   {% include "partials/local_assist_result.html" %}
   {% endif %}
+
+  {% include "partials/u4_logic_audit_panel.html" %}
 </section>
 {% endblock %}

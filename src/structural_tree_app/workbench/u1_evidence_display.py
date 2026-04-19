@@ -60,6 +60,7 @@ def u1_readiness_hint_html(assist: LocalAssistResponse | None, project_id: str) 
 def u1_response_authority_summary_label(summary: str) -> str:
     mapping = {
         "retrieval_passages_only_not_synthesized": "Retrieval-only passages (no LLM synthesis)",
+        "local_model_synthesis_bounded": "Bounded local model restatement (citations unchanged; not a merged conclusion)",
         "no_passages_retrieval_refusal": "No passages under authority gate / refusal",
         "query_invalid": "Query invalid",
         "system_error": "System / project error",

@@ -94,7 +94,7 @@ def test_u1_post_assist_shows_citations_and_legacy_binding(client: TestClient, t
     assert r.status_code == 200
     assert "evidence_passages_assembled" in r.text
     assert "legacy_allowed_documents" in r.text or "Normative retrieval" in r.text
-    assert "Open source fragment" in r.text
+    assert "Open citation source view" in r.text
     assert "/workbench/project/evidence/fragment/" in r.text
 
 

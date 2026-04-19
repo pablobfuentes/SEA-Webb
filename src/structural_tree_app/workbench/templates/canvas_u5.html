@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Case canvas (U5){% endblock %}
+{% block heading %}Case canvas — reasoning / process board (U5){% endblock %}
+{% block extra_css %}
+.u5-canvas { max-width: 58rem; }
+.u5-canvas .meta { font-size: 0.9rem; color: #333; margin-bottom: 0.75rem; }
+.u5-canvas .disclaimer { border-left: 4px solid #069; padding: 0.5rem 0.65rem; background: #f0f8ff; margin: 0.75rem 0; font-size: 0.9rem; }
+.u5-canvas .lane { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.65rem; margin: 0.75rem 0; }
+.u5-canvas .card { border: 1px solid #bbb; padding: 0.5rem 0.6rem; background: #fff; border-radius: 2px; }
+.u5-canvas .card h3 { font-size: 0.85rem; margin: 0 0 0.35rem; }
+.u5-canvas .flow-row { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; margin: 0.25rem 0; }
+.u5-canvas .badge { display: inline-block; font-size: 0.72rem; padding: 0.12rem 0.35rem; border-radius: 2px; margin-right: 0.25rem; }
+.u5-canvas .u5-conf-deterministic { background: #e8f4e8; border: 1px solid #363; }
+.u5-canvas .u5-conf-low { background: #fff8e6; border: 1px solid #a60; }
+.u5-canvas .u5-scope-evidence { border-left: 3px solid #069; }
+.u5-canvas .u5-scope-derived { border-left: 3px solid #606; background: #faf5ff; }
+.u5-canvas .u5-scope-heuristic { border-left: 3px solid #a60; background: #fffaf0; }
+.u5-canvas .u5-formula-supported { border-left: 4px solid #363; background: #f6fff6; }
+.u5-canvas .u5-formula-recognized { border-left: 4px solid #a60; background: #fffef5; }
+.u5-canvas .u5-formula-gap { border-left: 4px solid #999; background: #f5f5f5; }
+.u5-canvas .u5-exec-step { border: 1px dashed #666; padding: 0.45rem; background: #fafafa; font-size: 0.88rem; }
+.u5-canvas .u5-exec-step .prelim { font-size: 0.72rem; color: #630; }
+.u5-canvas .u5-gap { border-left: 4px solid #c00; padding: 0.35rem 0.5rem; background: #fff5f5; margin: 0.35rem 0; font-size: 0.88rem; }
+.u5-canvas .legend { display: flex; flex-wrap: wrap; gap: 0.75rem; font-size: 0.8rem; margin: 0.5rem 0; padding: 0.5rem; border: 1px solid #ccc; background: #fafafa; }
+.u5-canvas .anchor-row { font-size: 0.82rem; margin: 0.2rem 0; }
+.u5-canvas .anchor-row a { margin-right: 0.35rem; }
+.u5-canvas .derived-flag { color: #606; font-size: 0.72rem; }
+.u5-canvas .empty-case { border: 1px dashed #999; padding: 0.75rem; background: #fff; margin: 0.75rem 0; }
+.u5-canvas .get-form { margin: 0.75rem 0; padding: 0.75rem; border: 1px solid #ccc; background: #fff; }
+.u5-canvas .u4-logic-audit .u4-det-badge { font-size: 0.72rem; padding: 0.08rem 0.35rem; border-radius: 2px; background: #e8e8e8; border: 1px solid #666; margin-right: 0.35rem; }
+.u5-canvas .u4-logic-audit .u4-prelim-badge { font-size: 0.72rem; padding: 0.08rem 0.35rem; border-radius: 2px; background: #fff8e6; border: 1px solid #a60; margin-right: 0.35rem; }
+{% endblock %}
+{% block content %}
+<section class="u5-canvas" aria-labelledby="u5-h">
+  {% include "partials/case_flow_primary_nav.html" %}
+  {% include "partials/u6_secondary_to_workflow.html" %}
+  <h2 id="u5-h" style="font-size:1rem;">Visual case board</h2>
+  <p class="meta">Case-scoped view of <code>ReasoningBridgeResult</code> (R2B). Governed corpus fragments remain normative evidence; this board is interpretive navigation. <strong>Not</strong> a solver or CAD surface.</p>
+
+  {% if err %}<p role="alert" style="color:#600;"><strong>Error:</strong> {{ err }}</p>{% endif %}
+
+  <p class="meta"><strong>Project:</strong> <code>{{ project_id }}</code>
+    {% if query_text %}· <strong>Query:</strong> <q>{{ query_text }}</q>{% endif %}
+  </p>
+
+  {% if bridge_board %}
+  <p class="disclaimer" role="note">{{ bridge_board.bridge_disclaimer }}</p>
+  <div class="legend" aria-label="Legend">
+    <span><span class="badge u5-conf-deterministic">●</span> Strong keyword match</span>
+    <span><span class="badge u5-scope-evidence" style="padding:0 0.35rem;">│</span> Evidence-led step</span>
+    <span><span class="badge u5-scope-derived" style="padding:0 0.35rem;">│</span> Derived / navigation</span>
+    <span><span class="badge u5-formula-supported" style="padding:0 0.35rem;">│</span> Formula/check tier: supported</span>
+    <span><span class="badge u5-formula-recognized" style="padding:0 0.35rem;">│</span> Recognized only</span>
+    <span><span class="badge u5-formula-gap" style="padding:0 0.35rem;">│</span> Gap / insufficient</span>
+  </div>
+
+  <div class="lane">
+    <div class="card">
+      <h3>Interpreted problem</h3>
+      {% if bridge_board.interpretation %}
+      <p><strong>{{ bridge_board.interpretation.problem_family_label }}</strong>
+        <span class="badge {{ bridge_board.interpretation.confidence_class }}">{{ bridge_board.interpretation.confidence }}</span>
+      </p>
+      {% if bridge_board.interpretation.tokens %}
+      <p class="meta">Tokens: {% for t in bridge_board.interpretation.tokens %}<code>{{ t }}</code>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+      {% endif %}
+      {% else %}
+      <p class="meta"><em>No problem family mapping for this query.</em></p>
+      {% endif %}
+      <p class="meta">Retrieval: <code>{{ bridge_board.retrieval_status }}</code> · normative source: <code>{{ bridge_board.retrieval_normative_source }}</code></p>
+      {% if bridge_board.governance_normative_block %}
+      <p class="meta" style="color:#606;"><strong>Governance block:</strong> {{ bridge_board.governance_normative_block }}</p>
+      {% endif %}
+      {% if bridge_board.retrieval_message %}<p class="meta">{{ bridge_board.retrieval_message }}</p>{% endif %}
+    </div>
+    <div class="card">
+      <h3>Analysis status</h3>
+      <p><code>{{ bridge_board.analysis_status }}</code>
+        {% if bridge_board.analysis_error_message %} — {{ bridge_board.analysis_error_message }}{% endif %}
+      </p>
+      {% if bridge_board.warnings %}
+      <ul>{% for w in bridge_board.warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+      {% endif %}
+    </div>
+  </div>
+
+  <h3 style="font-size:0.95rem;margin-top:1rem;">Candidate process steps</h3>
+  {% if bridge_board.process_steps %}
+  <div class="lane">
+    {% for step in bridge_board.process_steps %}
+    <div class="card {{ step.scope_class }}">
+      <p><strong>{{ step.label }}</strong> <span class="badge">{{ step.process_scope }}</span></p>
+      {% if step.notes %}<p class="meta">{{ step.notes }}</p>{% endif %}
+      {% if step.anchors %}
+      <p class="meta">Anchors:</p>
+      {% for a in step.anchors %}
+      <div class="anchor-row">
+        <a href="{{ a.href }}">Open citation source view</a>
+        <span class="derived-flag">{% if a.is_derived_kind %}(derived layer){% else %}(retrieval){% endif %}</span>
+        — {{ a.authority_note }}
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="meta"><em>None.</em></p>
+  {% endif %}
+
+  <h3 style="font-size:0.95rem;margin-top:1rem;">Candidate formulas / checks</h3>
+  {% if bridge_board.formulas %}
+  <div class="lane">
+    {% for f in bridge_board.formulas %}
+    <div class="card {{ f.tier_class }}">
+      <p><strong>{{ f.label }}</strong></p>
+      <p class="flow-row">
+        <span class="badge">{{ f.tier_label }}</span>
+        {% if f.non_authoritative %}<span class="badge" style="background:#eee;border:1px solid #666;">non-authoritative label</span>{% endif %}
+        <span class="meta">source: <code>{{ f.source }}</code></span>
+      </p>
+      {% if f.anchors %}
+      <p class="meta">Evidence / navigation anchors (open fragment — deferred: full original-source page view):</p>
+      {% for a in f.anchors %}
+      <div class="anchor-row">
+        <a href="{{ a.href }}">Fragment</a>
+        <span class="derived-flag">{% if a.is_derived_kind %}(derived){% else %}(retrieval){% endif %}</span>
+        — {{ a.provenance_label }} — {{ a.authority_note }}
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="meta"><em>None.</em></p>
+  {% endif %}
+
+  <h3 style="font-size:0.95rem;margin-top:1rem;">Supported execution steps (deterministic — not normative evidence)</h3>
+  {% if bridge_board.execution_steps %}
+  {% for s in bridge_board.execution_steps %}
+  <div class="u5-exec-step">
+    <span class="prelim">Preliminary / deterministic · {{ s.authority_boundary }}</span>
+    <p><strong>{{ s.method_label }}</strong> · <code>{{ s.kind }}</code> · calc <code>{{ s.calculation_id }}</code> · node <code>{{ s.node_id }}</code></p>
+    {% if s.notes %}<p class="meta">{{ s.notes }}</p>{% endif %}
+  </div>
+  {% endfor %}
+  {% else %}
+  <p class="meta"><em>None.</em></p>
+  {% endif %}
+
+  <h3 style="font-size:0.95rem;margin-top:1rem;">Unsupported / gaps</h3>
+  {% if bridge_board.gaps %}
+  {% for g in bridge_board.gaps %}
+  <div class="u5-gap"><strong>{{ g.category }}</strong> — {{ g.message }}</div>
+  {% endfor %}
+  {% else %}
+  <p class="meta"><em>None listed.</em></p>
+  {% endif %}
+
+  {% if bridge_board.evidence_anchors_flat %}
+  <h3 style="font-size:0.95rem;margin-top:1rem;">All evidence anchors (traceability)</h3>
+  <ul class="meta">
+    {% for a in bridge_board.evidence_anchors_flat %}
+    <li><a href="{{ a.href }}">{{ a.anchor_kind }}</a> — {{ a.authority_note }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-case">
+    <p><strong>No case query loaded.</strong> Enter the same text you used in chat or evidence to render the reasoning bridge on this board.</p>
+    <form method="get" action="/workbench/project/canvas" class="get-form">
+      <p><label for="u5-q">Query text</label><br>
+        <textarea id="u5-q" name="q" rows="3" style="width:100%;max-width:42rem;" placeholder="Paste or type the case question…">{{ query_text or '' }}</textarea>
+      </p>
+      <p><button type="submit">Load visual board</button></p>
+    </form>
+  </div>
+  {% endif %}
+
+  <p class="meta" style="margin-top:1rem;">
+    <a href="{{ case_nav.chat }}">← Back to chat</a> ·
+    <a href="{{ case_nav.evidence }}">Open evidence panel</a>
+    {% if query_text %}· <a href="/workbench/project/canvas">Clear query (empty board)</a>{% endif %}
+  </p>
+
+  {% include "partials/u4_logic_audit_panel.html" %}
+</section>
+{% endblock %}

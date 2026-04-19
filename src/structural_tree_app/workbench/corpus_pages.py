@@ -24,7 +24,12 @@ from structural_tree_app.services.corpus_readiness import evaluate_document_read
 from structural_tree_app.services.document_service import DocumentIngestionService, IngestionResult
 from structural_tree_app.services.project_service import ProjectPersistenceError, ProjectService
 from structural_tree_app.workbench.config import ENV_SESSION_SECRET, ENV_WORKSPACE, get_templates_dir, get_workspace_path
-from structural_tree_app.workbench.deps import SESSION_PROJECT_KEY, ProjectServiceDep, SessionProjectIdDep
+from structural_tree_app.workbench.case_flow_handoff import (
+    build_case_nav,
+    invalidate_session_project,
+    resolve_prefill_query,
+)
+from structural_tree_app.workbench.deps import ProjectServiceDep, SessionProjectIdDep
 
 router = APIRouter(tags=["ui"])
 _templates = Jinja2Templates(directory=str(get_templates_dir()))
@@ -116,7 +121,7 @@ def corpus_bootstrap_page(
     try:
         ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return RedirectResponse(url="/workbench?err=" + quote(str(e)), status_code=303)
 
     gstore = ps.governance_store()
@@ -136,6 +141,7 @@ def corpus_bootstrap_page(
             "projection": proj,
             "msg": msg,
             "err": err,
+            "case_nav": build_case_nav(resolve_prefill_query(request, None)),
             "binding_explicit": proj.retrieval_binding == GovernanceRetrievalBinding.EXPLICIT_PROJECTION
             if proj
             else False,
@@ -154,7 +160,7 @@ async def corpus_upload(
     try:
         ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return _redirect_corpus(err=str(e))
 
     form = await request.form()
@@ -216,7 +222,7 @@ def corpus_document_detail(
     try:
         ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return RedirectResponse(url="/workbench?err=" + quote(str(e)), status_code=303)
 
     if document_id not in ps.load_project(session_pid).ingested_document_ids:
@@ -271,7 +277,7 @@ def corpus_bootstrap_action(
     try:
         ps.load_project(session_pid)
     except ProjectPersistenceError as e:
-        request.session.pop(SESSION_PROJECT_KEY, None)
+        invalidate_session_project(request)
         return _redirect_corpus(err=str(e))
 
     role = bootstrap_role.strip()

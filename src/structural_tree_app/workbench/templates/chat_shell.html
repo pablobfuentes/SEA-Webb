@@ -18,17 +18,17 @@
 .chat-shell .badge.sup { background: #eef6ee; border: 1px solid #363; }
 .chat-shell .readiness-hint { border-left: 4px solid #069; padding: 0.45rem 0.6rem; background: #f0f8ff; margin: 0.75rem 0; font-size: 0.92rem; }
 .chat-shell .chat-form { background: #fff; border: 1px solid #ccc; padding: 0.75rem; margin: 1rem 0; }
+.chat-shell .u3-synthesis-control { border: 1px solid #ccc; padding: 0.6rem 0.65rem; margin: 0.5rem 0 0; background: #fafafa; border-radius: 2px; }
+.chat-shell .u4-logic-audit .u4-det-badge { font-size: 0.72rem; padding: 0.08rem 0.35rem; border-radius: 2px; background: #e8e8e8; border: 1px solid #666; margin-right: 0.35rem; }
+.chat-shell .u4-logic-audit .u4-prelim-badge { font-size: 0.72rem; padding: 0.08rem 0.35rem; border-radius: 2px; background: #fff8e6; border: 1px solid #a60; margin-right: 0.35rem; }
+.chat-shell .u4-deterministic { margin-top: 0.75rem; }
 {% endblock %}
 {% block content %}
 <section class="chat-shell evidence-panel" aria-labelledby="u2-h">
-  <p class="meta">
-    <a href="/workbench">← Project hub</a> ·
-    <a href="/workbench/project/evidence">Structured evidence panel (U1)</a> ·
-    <a href="/workbench/project/corpus">Corpus</a> ·
-    <a href="/workbench/project/workflow">Workflow</a>
-  </p>
+  {% include "partials/case_flow_primary_nav.html" %}
+  {% include "partials/u6_secondary_to_workflow.html" %}
   <h2 id="u2-h" style="font-size:1rem;">Primary assistant</h2>
-  <p class="meta">Questions run through <code>LocalAssistOrchestrator</code> only — same governed retrieval as the evidence panel. Answers are subordinate to citations; no LLM synthesis beyond the orchestrator disclosure.</p>
+  <p class="meta">Questions run through <code>LocalAssistOrchestrator</code> — governed retrieval first. Use the form below for optional bounded restatement of <code>answer_text</code> (U3). Citations and refusals are not model-generated.</p>
 
   {% if err %}<p role="alert" style="color:#600;"><strong>Error:</strong> {{ err }}</p>{% endif %}
 
@@ -50,13 +50,19 @@
         <label><input type="checkbox" name="include_deterministic_hooks" value="1" {% if form_inc_hooks %}checked{% endif %}> Include deterministic hooks (M5 / calc — not citations)</label><br>
         <label><input type="checkbox" name="match_project_primary_standard_family" value="1" {% if form_match_fam %}checked{% endif %}> Match project primary standard family (normative mode)</label>
       </p>
+      {% with u3_checkbox_id="u3-req-synth-chat" %}
+      {% include "partials/u3_synthesis_control.html" %}
+      {% endwith %}
       <p><label>Limit <input name="retrieval_limit" type="number" min="1" max="100" value="{{ form_limit or 20 }}" style="width:4rem;"></label></p>
       <p><button type="submit">Ask assistant</button></p>
+      <p class="meta"><a href="{{ case_nav.canvas }}">Open this query on the visual case board (U5)</a> — same text as the field above when non-empty; navigation links also preserve the query when set.</p>
     </form>
   </div>
 
   {% if assist %}
   {% include "partials/local_assist_result.html" %}
   {% endif %}
+
+  {% include "partials/u4_logic_audit_panel.html" %}
 </section>
 {% endblock %}

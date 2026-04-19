@@ -1,0 +1,24 @@
+{# U3 UX — always visible; checkbox disabled when server-side synthesis is off (no name= so it does not submit). #}
+{% set u3_cid = u3_checkbox_id | default('u3-req-synth') %}
+<div class="u3-synthesis-control" role="group" aria-labelledby="{{ u3_cid }}-heading">
+  <h3 id="{{ u3_cid }}-heading" style="font-size:0.95rem;margin:0 0 0.35rem 0;">Local answer synthesis (U3)</h3>
+  <p class="meta u3-synth-help" style="margin:0 0 0.5rem 0;">
+    {% if u3_local_model_enabled_globally %}
+    <strong>Server:</strong> bounded synthesis is allowed (provider <code>{{ u3_local_model_provider }}</code>).
+    <strong>Unchecked:</strong> <code>answer_text</code> is the retrieval/orchestration assembly only.
+    <strong>Checked:</strong> only <code>answer_text</code> may be restated from evidence already retrieved; citations, authority labels, refusals, deterministic hooks, and assumptions are unchanged.
+    {% else %}
+    Bounded synthesis is <strong>unavailable</strong> because server-side enablement is off. Set environment variable <code>STRUCTURAL_LOCAL_MODEL_ENABLED=1</code> before starting the workbench (optional: <code>STRUCTURAL_LOCAL_MODEL_PROVIDER=stub</code> or <code>unavailable</code>). The checkbox stays visible but cannot be used until then.
+    {% endif %}
+  </p>
+  <p class="meta" style="margin:0;">
+    <label for="{{ u3_cid }}">
+      {% if u3_local_model_enabled_globally %}
+      <input id="{{ u3_cid }}" type="checkbox" name="request_local_model_synthesis" value="1" {% if form_synth %}checked{% endif %}>
+      {% else %}
+      <input id="{{ u3_cid }}" type="checkbox" value="1" disabled aria-disabled="true" title="Set STRUCTURAL_LOCAL_MODEL_ENABLED=1 on the server to enable">
+      {% endif %}
+      Request bounded restatement of <code>answer_text</code> for this query
+    </label>
+  </p>
+</div>

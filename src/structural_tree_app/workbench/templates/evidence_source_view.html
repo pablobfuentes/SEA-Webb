@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Citation source{% endblock %}
+{% block heading %}Citation source view{% endblock %}
+{% block content %}
+{% include "partials/case_flow_primary_nav.html" %}
+<p class="meta"><a href="/workbench/project/evidence">← Evidence panel</a></p>
+{% if error %}
+<p role="alert" style="color:#600;"><strong>{{ error }}</strong></p>
+{% elif document and fragment %}
+<section class="evidence-source-view" aria-label="Citation source">
+  <p class="meta"><strong>{{ document.title }}</strong> · document <code>{{ document.id }}</code></p>
+  <p class="meta">Fragment <code>{{ fragment.id }}</code> · chunk index {{ fragment.chunk_index }}</p>
+  <p class="meta">
+    Physical file pages (see note below):
+    {% if fragment.page_start is not none %}{{ fragment.page_start }}{% else %}—{% endif %}
+    –
+    {% if fragment.page_end is not none %}{{ fragment.page_end }}{% else %}—{% endif %}
+  </p>
+  <p class="meta" style="font-size:0.88rem;color:#444;">{{ source.page_semantics_note }}</p>
+  <p class="meta"><code>material_content_hash={{ fragment.material_content_hash }}</code>
+    · <code>fragment_content_hash={{ fragment.fragment_content_hash }}</code></p>
+
+  {% if source %}
+  <div class="warn" style="border-left:4px solid #069;padding:0.5rem 0.65rem;background:#f0f8ff;margin:0.75rem 0;font-size:0.92rem;">
+    <strong>Location:</strong> {{ source.location_note }}
+  </div>
+  <div class="warn" style="border-left:4px solid #666;padding:0.5rem 0.65rem;background:#f9f9f9;margin:0.75rem 0;font-size:0.92rem;">
+    <strong>Highlighting:</strong> {{ source.highlight_note }}
+  </div>
+  <p class="meta">Precision: <strong>{{ source.location_precision }}</strong>
+    · Mode: <strong>{{ source.source_view_mode }}</strong>
+    {% if source.file_available %}· Governed file verified (SHA-256){% else %}· <span style="color:#a60;">Governed file missing or failed integrity check</span>{% endif %}
+  </p>
+
+  {% if source.source_view_mode == "pdf_side_by_side" and source.pdf_viewer_url %}
+  <div style="display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:1rem;align-items:start;max-width:100%;">
+    <div>
+      <p class="meta" style="margin-bottom:0.35rem;">
+        <strong>Original PDF</strong> — physical page <strong>{{ source.pdf_viewer_target_page_1based }}</strong>
+        &nbsp;·&nbsp;
+        <a href="{{ source.pdf_open_url }}" target="_blank" rel="noopener" style="font-weight:600;">Open in new tab ↗</a>
+      </p>
+      <iframe
+        src="{{ source.pdf_viewer_url }}"
+        title="PDF viewer — {{ document.title|e }}"
+        style="width:100%;height:32rem;border:1px solid #aaa;border-radius:2px;background:#555;"
+        sandbox="allow-scripts allow-same-origin"
+        loading="lazy"
+      ></iframe>
+      <p class="meta" style="font-size:0.83rem;color:#666;margin-top:0.3rem;">
+        Rendered with PDF.js at physical page {{ source.pdf_viewer_target_page_1based }}
+        ({{ source.location_precision|replace("_"," ") }}).
+        If the viewer does not load, use the "Open in new tab" link above.
+      </p>
+    </div>
+    <div>
+      <p class="meta" style="margin-bottom:0.35rem;"><strong>Cited fragment (exact text)</strong></p>
+      <pre style="white-space:pre-wrap;background:#fff;border:1px solid #ccc;padding:0.75rem;max-height:32rem;overflow:auto;font-size:0.9rem;">{{ fragment.text }}</pre>
+    </div>
+  </div>
+  {% elif source.source_view_mode == "text_side_by_side" and source.file_url %}
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;align-items:start;">
+    <div>
+      <p class="meta" style="margin-bottom:0.35rem;"><strong>Original text file</strong></p>
+      <iframe src="{{ source.file_url }}" title="Original text file" style="width:100%;min-height:20rem;border:1px solid #ccc;background:#fff;"></iframe>
+      <p class="meta" style="font-size:0.85rem;"><a href="{{ source.file_url }}" target="_blank" rel="noopener">Open file in new tab</a></p>
+    </div>
+    <div>
+      <p class="meta" style="margin-bottom:0.35rem;"><strong>Cited fragment (exact text)</strong></p>
+      <pre style="white-space:pre-wrap;background:#fff;border:1px solid #ccc;padding:0.75rem;">{{ fragment.text }}</pre>
+    </div>
+  </div>
+  {% else %}
+  <div class="warn" style="border-left:4px solid #a60;padding:0.5rem 0.65rem;background:#fff8f0;margin:0.75rem 0;">
+    <strong>Fallback:</strong> The governed original file is not available here (missing path, failed integrity check, or unsupported type for this viewer).
+    The cited fragment text below is still the authoritative evidence excerpt.
+  </div>
+  <p class="meta" style="margin-bottom:0.35rem;"><strong>Cited fragment (exact text)</strong></p>
+  <pre style="white-space:pre-wrap;background:#fff;border:1px solid #ccc;padding:0.75rem;max-width:52rem;">{{ fragment.text }}</pre>
+  {% endif %}
+  {% else %}
+  <p class="meta" style="margin-bottom:0.35rem;"><strong>Cited fragment (exact text)</strong></p>
+  <pre style="white-space:pre-wrap;background:#fff;border:1px solid #ccc;padding:0.75rem;max-width:52rem;">{{ fragment.text }}</pre>
+  {% endif %}
+</section>
+{% else %}
+<p role="alert">Unable to load fragment.</p>
+{% endif %}
+{% endblock %}

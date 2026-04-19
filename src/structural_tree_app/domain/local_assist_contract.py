@@ -39,6 +39,8 @@ class LocalAssistQuery:
     include_project_assumptions: bool = True
     include_deterministic_hooks: bool = False
     """When True, lists preliminary / deterministic Calculation records from live tree (read-only pointers)."""
+    request_local_model_synthesis: bool = False
+    """U3: when True, orchestrator may restate ``answer_text`` if global runtime config allows (citations unchanged)."""
 
 
 # --- Response: authority & status --------------------------------------------
@@ -58,6 +60,7 @@ CitationAuthorityClass = Literal[
 
 ResponseAuthoritySummary = Literal[
     "retrieval_passages_only_not_synthesized",
+    "local_model_synthesis_bounded",
     "no_passages_retrieval_refusal",
     "query_invalid",
     "system_error",
@@ -148,7 +151,7 @@ class DeterministicHookItem:
 
 @dataclass(frozen=True)
 class LocalAssistResponse:
-    """Bounded assembly for R1; answer text is honest about lack of LLM synthesis."""
+    """Bounded assembly for R1/U3; answer text discloses retrieval-only vs bounded local restatement."""
 
     answer_status: LocalAssistAnswerStatus
     answer_text: str
