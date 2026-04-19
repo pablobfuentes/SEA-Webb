@@ -53,7 +53,7 @@ def test_workflow_post_shows_persisted_snapshot(client: TestClient) -> None:
     assert page.status_code == 200
     assert WORKFLOW_ID in page.text
     assert "Persisted workflow" in page.text
-    assert "Alternatives" in page.text
+    assert "All alternatives" in page.text
 
 
 def test_workflow_without_project_redirects(client: TestClient) -> None:

@@ -204,10 +204,10 @@ The UI **must not** merge categories. Use **parallel display**: human label + **
 |----|------|------------|--------------|--------------|-------------|----------|-------|
 | **M1** | Baseline freeze + UI boundary | Confirm Block 3 API surface; list integration points; add Block 4A docs only | Block 3 complete | `docs/`, trackers | Doc review | Revert doc commit | Scope creep |
 | **M2** | App shell + dependency choice | Add minimal web deps (`fastapi`, `uvicorn`, `jinja2` — exact pins in `pyproject`); stub app boots; `/health` | M1 | `pyproject.toml`, `src/.../workbench/` or `workbench/` | Import + health route test | Remove package | Dependency bloat |
-| **M3** | Project + workspace wiring | Create/open project; display project id; workspace path from env | M2 | workbench routes, thin config | TestClient: create project | Revert routes | Path confusion on Windows |
-| **M4** | Workflow input + M3/M4 trigger | Form for `SimpleSpanWorkflowInput`; call `setup_initial_workflow`; show result ids | M3 | same | Integration test against `tmp_path` workspace | Revert | Schema drift vs `simple_span_workflow_input.schema.json` |
-| **M5** | Branches + alternatives + characterization views | List branches/alternatives; render characterization table with provenance | M4 | templates | Snapshot or assert HTML contains provenance strings | Revert | XSS — escape user-facing text |
-| **M6** | Materialize + M5 run + calc/check panel | Buttons call `materialize_working_branch_for_alternative`, `run_simple_span_m5_preliminary`; detail views | M5 | same | TestClient flow matches `test_block3_vertical_flow` | Revert | Double-post M5 |
+| **M3** | Project + workspace + simple-span workflow setup | Session `project_id`; create/open/close; `GET|POST /workbench/project/workflow`; form → `setup_initial_workflow` | M2 | workbench routes, templates | TestClient: create + POST workflow | Revert routes | Path confusion on Windows |
+| **M4** | Alternatives & characterization inspection | After M3 setup: list all persisted alternatives; top‑K suggestion markers (`suggested`, rank, score, `suggestion_provenance`); `characterization_items` with provenance legend (raw + label); no materialize/M5 UI | M3 | `workflow_summary`, templates | `test_workbench_m4` — provenance substrings in HTML | Revert | XSS — rely on Jinja escaping |
+| **M5** | Branch / tree panels (read-only lists) | List branches / nodes for navigation context (no execution) | M4 | templates | Snapshot HTML | Revert | Scope creep |
+| **M6** | Materialize branch + M5 preliminary run UI | Buttons call `materialize_working_branch_for_alternative`, `run_simple_span_m5_preliminary`; calc/check readouts | M5 | same | TestClient flow matches `test_block3_vertical_flow` | Revert | Double-post M5 |
 | **M7** | M6 comparison + revision replay UI | Branch multi-select comparison; `create_revision`; snapshot mode | M6 | same | E2E API test mirroring `tests/test_block3_vertical_flow.py` | Revert | Revision id confusion |
 
 **Note:** Milestone numbers **4A-M1…M7** are independent from Block 3 M-numbers; cross-references always say “Block 4A M*”.
@@ -248,15 +248,16 @@ The UI **must not** merge categories. Use **parallel display**: human label + **
 | Block 4A capability | Milestone | Primary implementation | Test intent | Acceptance signal |
 |---------------------|-----------|------------------------|-------------|---------------------|
 | Open/create project | 4A-M3 | workbench routes + `ProjectService` | TestClient creates project | Project id visible; files on disk |
-| Simple-span workflow setup | 4A-M4 | form → `setup_initial_workflow` | Integration test | `SimpleSpanWorkflowResult` fields shown |
-| View root + decision + alternatives | 4A-M5 | templates + store loads | HTML/assert JSON | Matches persisted ids |
-| Top-3 vs eligible distinction | 4A-M5 | table columns | assert `suggested` column | Same semantics as Block 3 |
-| Characterization provenance | 4A-M5 | per-item badge | string present | No blended categories |
+| Simple-span workflow setup | 4A-M3 | form → `setup_initial_workflow` | Integration test | Persisted tree ids |
+| View alternatives + suggestions + characterization | 4A-M4 | `workflow_summary` + templates | `test_workbench_m4` | Provenance raw strings + legend; suggested vs eligible sections |
+| Top‑K vs eligible distinction | 4A-M4 | snapshot sections + columns | assert `suggested` / rank | Same semantics as Block 3 |
+| Characterization provenance | 4A-M4 | per-item rows + legend | provenance constants in HTML | No blended categories |
+| Branch panels (read-only) | 4A-M5 | templates + store loads | HTML | Matches persisted ids |
 | Materialize branch | 4A-M6 | POST → `materialize_*` | test | `origin_alternative_id` set |
 | M5 run | 4A-M6 | POST → `run_simple_span_m5_preliminary` | test | Calc+checks listed |
 | M6 comparison | 4A-M7 | POST → `compare_branches` | test | `citation_trace_authority` visible |
 | Revision + replay | 4A-M7 | `create_revision` + snapshot compare | test | Matches Block 3 M7 behavior |
-| Authority UI rules | 4A-M5–M7 | templates | manual + automated string checks | Banners present |
+| Authority UI rules | 4A-M4–M7 | templates | manual + automated string checks | Banners present |
 
 ---
 

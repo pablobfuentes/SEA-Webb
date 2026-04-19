@@ -14,6 +14,7 @@ from structural_tree_app.domain.project_codec import (
     project_from_dict,
     project_to_dict,
 )
+from structural_tree_app.services.governance_store import GovernanceStore
 from structural_tree_app.storage.json_repository import JsonRepository
 from structural_tree_app.storage.tree_store import TreeStore, copy_tree_directory
 from structural_tree_app.validation.json_schema import (
@@ -53,6 +54,10 @@ class ProjectService:
     def __init__(self, workspace_path: str | Path) -> None:
         self.repository = JsonRepository(workspace_path)
 
+    def governance_store(self) -> GovernanceStore:
+        """G0 governance persistence (projection, per-document index, append-only event log)."""
+        return GovernanceStore(self.repository)
+
     def _project_dir(self, project_id: str) -> Path:
         return self.repository.base_path / project_id
 
@@ -61,7 +66,7 @@ class ProjectService:
 
     def _ensure_layout(self, project_id: str) -> None:
         root = self._project_dir(project_id)
-        for sub in ("revisions", "tree", "documents", "exports"):
+        for sub in ("revisions", "tree", "documents", "exports", "governance"):
             (root / sub).mkdir(parents=True, exist_ok=True)
         for sub in ("branches", "nodes", "decisions", "alternatives", "calculations", "checks", "references"):
             (root / "tree" / sub).mkdir(parents=True, exist_ok=True)

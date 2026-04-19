@@ -1,0 +1,51 @@
+{
+  "decision_id": "dec_04e1117d0426",
+  "title": "Castellated / cellular beam",
+  "description": "Castellated or cellular profile along the span. Workflow guidance only.",
+  "catalog_key": "castellated",
+  "characterization_items": [
+    {
+      "text": "Web openings can reduce self-weight versus solid sections (workflow heuristic v1).",
+      "polarity": "pro",
+      "provenance": "workflow_heuristic",
+      "reference_id": null,
+      "retrieval_query": null,
+      "citation_authority": null
+    },
+    {
+      "text": "Web-post and weld details require coordination (workflow heuristic v1).",
+      "polarity": "con",
+      "provenance": "workflow_heuristic",
+      "reference_id": null,
+      "retrieval_query": null,
+      "citation_authority": null
+    },
+    {
+      "text": "Additional project-specific pros/cons may be entered manually (placeholder; not evidence).",
+      "polarity": "pro",
+      "provenance": "manual_placeholder",
+      "reference_id": null,
+      "retrieval_query": null,
+      "citation_authority": null
+    },
+    {
+      "text": "No matching passage in the normative active primary corpus for the deterministic retrieval query for 'castellated' (not_yet_evidenced).",
+      "polarity": "con",
+      "provenance": "not_yet_evidenced",
+      "reference_id": null,
+      "retrieval_query": "castellated cellular beam openings",
+      "citation_authority": "normative_active_primary"
+    }
+  ],
+  "pros": [],
+  "cons": [],
+  "constraints": [],
+  "next_expected_decisions": [],
+  "suggested": true,
+  "suggestion_rank": 2,
+  "suggestion_score": 55.0,
+  "suggestion_provenance": "workflow_heuristic",
+  "status": "candidate",
+  "reactivatable": true,
+  "id": "alt_9760e2d4c635"
+}

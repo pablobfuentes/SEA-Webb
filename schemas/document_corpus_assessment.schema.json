@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://structural-tree-app.local/schemas/document_corpus_assessment.schema.json",
+  "title": "DocumentCorpusAssessment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project_id",
+    "subject_document_id",
+    "assessed_at",
+    "assessment_framing",
+    "candidates",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^g2\\.[0-9]+$"
+    },
+    "project_id": { "type": "string", "minLength": 1 },
+    "subject_document_id": { "type": "string", "minLength": 1 },
+    "assessed_at": { "type": "string", "minLength": 1 },
+    "assessment_framing": { "type": "string", "minLength": 1 },
+    "notes": { "type": "string" },
+    "candidates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/corpus_assessment_candidate" }
+    }
+  },
+  "$defs": {
+    "corpus_assessment_candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "other_document_id",
+        "relation",
+        "confidence",
+        "signals",
+        "details"
+      ],
+      "properties": {
+        "other_document_id": { "type": "string", "minLength": 1 },
+        "relation": {
+          "type": "string",
+          "enum": [
+            "duplicate_candidate",
+            "overlap_candidate",
+            "contradiction_candidate",
+            "supersession_candidate",
+            "supporting_candidate"
+          ]
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"]
+        },
+        "signals": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "details": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

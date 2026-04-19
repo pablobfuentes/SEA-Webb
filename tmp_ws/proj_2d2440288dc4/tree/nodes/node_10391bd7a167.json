@@ -1,0 +1,18 @@
+{
+  "project_id": "proj_2d2440288dc4",
+  "branch_id": "branch_6dcef62ee2fe",
+  "node_type": "output",
+  "title": "Path root — Truss (celosía)",
+  "description": "Stub node for the selected alternative working path (M4).",
+  "parent_node_id": null,
+  "state": "open",
+  "order_index": 0,
+  "depth": 0,
+  "id": "node_10391bd7a167",
+  "child_node_ids": [],
+  "linked_reference_ids": [],
+  "linked_calculation_ids": [],
+  "linked_assumption_ids": [],
+  "created_at": "2026-04-18T19:05:37.773727+00:00",
+  "updated_at": "2026-04-18T19:05:37.773727+00:00"
+}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Evidence panel (U1){% endblock %}
+{% block heading %}Evidence panel — local assist (U1){% endblock %}
+{% block extra_css %}
+.evidence-panel { max-width: 52rem; }
+.evidence-panel .meta { font-size: 0.9rem; color: #333; margin-bottom: 0.75rem; }
+.evidence-panel .provenance { border: 1px solid #999; padding: 0.5rem 0.65rem; background: #fafafa; margin: 0.75rem 0; }
+.evidence-panel .warn { border-left: 4px solid #a60; padding: 0.35rem 0.5rem; background: #fff8f0; margin: 0.5rem 0; }
+.evidence-panel .refusal { border-left: 4px solid #a00; padding: 0.5rem 0.65rem; background: #fff5f5; margin: 0.75rem 0; }
+.evidence-panel .refusal.gov { border-left-color: #606; background: #faf5ff; }
+.evidence-panel .hooks { border: 1px dashed #666; padding: 0.5rem; margin-top: 1rem; background: #f9f9f9; }
+.evidence-panel .assume { border: 1px solid #aaa; padding: 0.5rem; margin-top: 0.75rem; background: #f5f5f5; }
+.evidence-panel details { margin: 0.4rem 0; border: 1px solid #ccc; padding: 0.35rem 0.5rem; background: #fff; }
+.evidence-panel summary { cursor: pointer; font-weight: 600; }
+.evidence-panel .snippet { white-space: pre-wrap; margin: 0.35rem 0 0; font-size: 0.92rem; }
+.evidence-panel .badge { display: inline-block; font-size: 0.75rem; padding: 0.1rem 0.35rem; border-radius: 2px; margin-right: 0.35rem; }
+.evidence-panel .badge.auth { background: #e0f0ff; border: 1px solid #069; }
+.evidence-panel .badge.sup { background: #eef6ee; border: 1px solid #363; }
+.evidence-panel .readiness-hint { border-left: 4px solid #069; padding: 0.45rem 0.6rem; background: #f0f8ff; margin: 0.75rem 0; font-size: 0.92rem; }
+{% endblock %}
+{% block content %}
+<section class="evidence-panel" aria-labelledby="u1-h">
+  <p class="meta"><a href="/workbench">← Project hub</a> · <a href="/workbench/project/workflow">Workflow</a></p>
+  <h2 id="u1-h" style="font-size:1rem;">Structured retrieval preview (no chat thread; no LLM)</h2>
+  <p class="meta">This panel surfaces <code>LocalAssistResponse</code> from <code>LocalAssistOrchestrator</code> only. Retrieval remains the authority gate.</p>
+
+  {% if err %}<p role="alert" style="color:#600;"><strong>Error:</strong> {{ err }}</p>{% endif %}
+
+  <form method="post" action="/workbench/project/evidence/query" style="margin:1rem 0;">
+    <p><label>Query text<br><textarea name="retrieval_query_text" rows="3" style="width:100%;max-width:40rem;" required placeholder="Lexical search over ingested fragments…">{{ form_query or '' }}</textarea></label></p>
+    <p>
+      <label>Citation authority
+        <select name="citation_authority">
+          <option value="normative_active_primary" {% if form_mode == 'normative_active_primary' or not form_mode %}selected{% endif %}>normative_active_primary (authoritative primary gate)</option>
+          <option value="approved_ingested" {% if form_mode == 'approved_ingested' %}selected{% endif %}>approved_ingested (supporting / audit corpus)</option>
+        </select>
+      </label>
+    </p>
+    <p>
+      <label><input type="checkbox" name="include_project_assumptions" value="1" {% if form_inc_asm %}checked{% endif %}> Include project assumptions (non-citation)</label><br>
+      <label><input type="checkbox" name="include_deterministic_hooks" value="1" {% if form_inc_hooks %}checked{% endif %}> Include deterministic hooks (M5 / calc — not citations)</label><br>
+      <label><input type="checkbox" name="match_project_primary_standard_family" value="1" {% if form_match_fam %}checked{% endif %}> Match project primary standard family (normative mode)</label>
+    </p>
+    <p><label>Limit <input name="retrieval_limit" type="number" min="1" max="100" value="{{ form_limit or 20 }}" style="width:4rem;"></label></p>
+    <p><button type="submit">Run local assist</button></p>
+  </form>
+
+  {% if assist %}
+  <article aria-label="Assist response">
+    <h3 style="font-size:1rem;">Response</h3>
+    <p class="meta"><strong>answer_status:</strong> <code>{{ assist.answer_status }}</code>
+      · <strong>answer_status_detail:</strong> <code>{{ assist.answer_status_detail }}</code></p>
+    <p class="meta"><strong>response_authority_summary:</strong> {{ u1_summary_label(assist.response_authority_summary) }} (<code>{{ assist.response_authority_summary }}</code>)</p>
+
+    <div class="provenance" role="region" aria-label="Retrieval provenance">
+      <strong>Retrieval provenance</strong>
+      <p style="margin:0.35rem 0 0;">{{ u1_provenance(assist) }}</p>
+      <p class="meta" style="margin:0.25rem 0 0;"><code>citation_authority_requested={{ assist.citation_authority_requested }}</code>
+        · <code>normative_retrieval_binding={{ assist.normative_retrieval_binding }}</code></p>
+    </div>
+
+    {% if assist.warnings %}
+    <div class="warn" role="region" aria-label="Warnings">
+      <strong>Warnings</strong>
+      <ul style="margin:0.25rem 0 0 1rem;">{% for w in assist.warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+
+    {% if assist.refusal_reasons %}
+    {% for r in assist.refusal_reasons %}
+    <div class="refusal{% if u1_gov_refusal(r) %} gov{% endif %}" role="alert">
+      <strong>Refusal</strong> <code>{{ r.code }}</code>
+      <p style="margin:0.35rem 0 0; white-space: pre-wrap;">{{ r.message }}</p>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {{ u1_readiness_hint(assist)|safe }}
+
+    <h4 style="font-size:0.95rem; margin-top:1rem;">answer_text</h4>
+    <pre style="white-space:pre-wrap;background:#fff;border:1px solid #ccc;padding:0.5rem;font-size:0.9rem;">{{ assist.answer_text }}</pre>
+
+    {% if assist.citations %}
+    <h4 style="font-size:0.95rem;">Citations &amp; evidence slots</h4>
+    <ol>
+      {% for c in assist.citations %}
+      <li style="margin-bottom:0.75rem;">
+        <span class="badge {% if c.authority_class == 'authoritative_normative_active_primary' %}auth{% else %}sup{% endif %}">{{ u1_cite_badge(assist, c.authority_class) }}</span>
+        <strong>{{ c.document_title }}</strong>
+        <span class="meta">score={{ c.score }}</span>
+        <details>
+          <summary>Excerpt &amp; identifiers</summary>
+          <p class="snippet">{{ c.snippet }}</p>
+          <p class="meta">
+            <a href="/workbench/project/evidence/fragment/{{ c.document_id }}/{{ c.fragment_id }}">Open source fragment (local)</a>
+            · <code>citation_id={{ c.citation_id }}</code>
+            · <code>document_id={{ c.document_id }}</code> · <code>fragment_id={{ c.fragment_id }}</code>
+            · chunk {{ c.chunk_index }}
+            · pages {% if c.page_start is not none %}{{ c.page_start }}{% else %}?{% endif %}–{% if c.page_end is not none %}{{ c.page_end }}{% else %}?{% endif %}
+          </p>
+          <p class="meta"><code>content_hash={{ c.content_hash[:16] }}…</code> · <code>fragment_content_hash={{ c.fragment_content_hash[:16] }}…</code></p>
+        </details>
+      </li>
+      {% endfor %}
+    </ol>
+    <p class="meta">Evidence item ids (parallel slots): {% for e in assist.evidence_items %}<code>{{ e.evidence_id }}</code>→<code>{{ e.citation_id }}</code>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+    {% endif %}
+
+    {% if assist.deterministic_hooks %}
+    <div class="hooks" role="region" aria-label="Deterministic hooks">
+      <strong>Deterministic hooks (not document evidence)</strong>
+      <p class="meta" style="margin-top:0;">Engine / preliminary outputs — do not treat as normative citations.</p>
+      <ul>
+        {% for h in assist.deterministic_hooks %}
+        <li><code>{{ h.hook_id }}</code> · calc <code>{{ h.calculation_id }}</code> · {{ h.method_label }} · <em>{{ h.authority_boundary }}</em>
+          <br><span class="meta">{{ h.disclosure }}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if assist.assumptions %}
+    <div class="assume" role="region" aria-label="Assumptions">
+      <strong>Project assumptions</strong>
+      <p class="meta" style="margin-top:0;">{{ assist.assumptions[0].authority_note }}</p>
+      <ul>
+        {% for a in assist.assumptions %}
+        <li><strong>{{ a.label }}</strong> = {{ a.value }}{% if a.unit %} {{ a.unit }}{% endif %} <span class="meta">({{ a.source_type }})</span>{% if a.rationale %} — {{ a.rationale }}{% endif %}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </article>
+  {% endif %}
+</section>
+{% endblock %}

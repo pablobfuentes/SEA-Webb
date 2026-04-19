@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Document {{ document_id }}{% endblock %}
+{% block heading %}Document detail — corpus readiness{% endblock %}
+{% block content %}
+<p><a href="/workbench/project/corpus">← Corpus bootstrap</a> · <a href="/workbench">Hub</a></p>
+
+{% if msg %}<p role="status" style="color:#060;"><strong>Notice:</strong> {{ msg }}</p>{% endif %}
+{% if err %}<p role="alert" style="color:#600;"><strong>Error:</strong> {{ err }}</p>{% endif %}
+
+<section style="border:2px solid #333;padding:0.75rem;margin-bottom:1rem;background:#fafafa;">
+  <h2 style="font-size:1rem;margin-top:0;">Retrieval readiness (bridge)</h2>
+  <p style="margin:0 0 0.5rem;font-size:0.9rem;">
+    <strong>Primary label:</strong> <code>{{ readiness.readiness_label }}</code>
+    {% if readiness.normative_eligible %} — <span style="color:#060;">eligible for <strong>normative</strong> evidence retrieval</span>
+    {% elif readiness.supporting_eligible %} — <span style="color:#660;">supporting / audit path only</span> (approved; not normative-primary gate)
+    {% else %} — <span style="color:#600;">not retrieval-ready</span>{% endif %}
+  </p>
+  <p style="font-size:0.85rem;margin:0;">Ingestion and governance disposition alone do not imply normative readiness; retrieval remains the authority gate.</p>
+  <ul style="font-size:0.9rem;margin:0.5rem 0 0 1rem;">
+    <li><code>approval_status</code>: {{ readiness.approval_status }} {% if readiness.approval_ok %}(ok){% else %}(required: approved){% endif %}</li>
+    <li><code>normative_classification</code>: {{ readiness.normative_classification }} {% if readiness.primary_classification_ok %}(ok for normative){% else %}(normative requires primary_standard){% endif %}</li>
+    <li><code>standard_family</code> (document): {{ readiness.standard_family or '—' }}</li>
+    <li><code>active_code_context.primary_standard_family</code> (project): <code>{{ readiness.project_primary_standard_family }}</code>
+      {% if readiness.match_primary_family_assumed %}— checklist assumes evidence panel “match primary family” = on{% endif %}</li>
+    <li><code>retrieval_binding</code>: {{ readiness.retrieval_binding_mode }}</li>
+    <li>In legacy allow-list: {{ readiness.in_legacy_allowed_ids }}</li>
+    <li>In effective authoritative projection (explicit path): {{ readiness.in_effective_authoritative_projection }}</li>
+    <li>In governance index: {{ readiness.in_governance_index }}</li>
+    {% if readiness.governance_disposition %}<li>Governance <code>disposition</code>: {{ readiness.governance_disposition }}</li>{% endif %}
+    {% if readiness.project_normative_block_code %}
+    <li style="color:#600;"><strong>Project-level normative block:</strong> <code>{{ readiness.project_normative_block_code }}</code>
+      — {{ readiness.project_normative_block_detail }}</li>
+    {% endif %}
+  </ul>
+  {% if readiness.explanations %}
+  <details style="margin-top:0.5rem;">
+    <summary>Blocker detail</summary>
+    <ul>{% for x in readiness.explanations %}<li style="white-space:pre-wrap;">{{ x }}</li>{% endfor %}</ul>
+  </details>
+  {% endif %}
+</section>
+
+<section>
+  <h2 style="font-size:1rem;">Identity</h2>
+  <ul>
+    <li><strong>document_id</strong>: <code>{{ document_id }}</code></li>
+    <li><strong>title</strong>: {{ document.title }}</li>
+    <li><strong>language</strong>: {{ document.language }}</li>
+    <li><strong>content_hash</strong> (full): <code>{{ document.content_hash }}</code></li>
+    <li><strong>standard_family</strong>: {{ document.standard_family or '—' }}</li>
+    <li><strong>normative_classification</strong>: {{ document.normative_classification.value }}</li>
+    <li><strong>approval_status</strong> (document metadata): {{ document.approval_status.value }} — independent of governance disposition</li>
+  </ul>
+</section>
+
+<section style="margin-top:1rem;">
+  <h2 style="font-size:1rem;">Minimal actions (readiness)</h2>
+  <p style="font-size:0.9rem;">Approval and metadata are explicit; there is no hidden auto-activation beyond existing <code>document_corpus_policy</code> rules.</p>
+  <form method="post" action="/workbench/project/corpus/document/{{ document_id }}/approve" style="margin-bottom:0.75rem;">
+    <button type="submit" {% if readiness.approval_ok %}disabled title="Already approved"{% endif %}>Approve document (metadata)</button>
+  </form>
+  <form method="post" action="/workbench/project/corpus/document/{{ document_id }}/readiness-metadata">
+    <p><label>normative_classification<br>
+      <select name="normative_classification" required>
+        {% for v in normative_classification_values %}
+        <option value="{{ v }}" {% if document.normative_classification.value == v %}selected{% endif %}>{{ v }}</option>
+        {% endfor %}
+      </select>
+    </label></p>
+    <p><label>standard_family (must match project primary when using normative + match-family)<br>
+      <input type="text" name="standard_family" value="{{ document.standard_family or '' }}" style="width:min(32rem,100%);" placeholder="e.g. eurocode"></label></p>
+    <p><button type="submit">Save classification / standard_family</button></p>
+  </form>
+</section>
+
+<section style="margin-top:1rem;">
+  <h2 style="font-size:1rem;">Governance</h2>
+  {% if governance_record %}
+  <ul>
+    <li><strong>pipeline_stage</strong>: {{ governance_record.pipeline_stage.value }}</li>
+    <li><strong>disposition</strong>: {{ governance_record.disposition.value }}</li>
+    <li><strong>updated_at</strong>: {{ governance_record.updated_at }}</li>
+    {% if governance_record.analysis %}
+    <li><strong>analysis</strong>: fragments={{ governance_record.analysis.fragment_count }}, chars={{ governance_record.analysis.normalized_char_count }}</li>
+    {% endif %}
+    {% if governance_record.classification %}
+    <li><strong>classification</strong>: {{ governance_record.classification.normative_classification }} · incomplete={{ governance_record.classification.classification_incomplete }}</li>
+    {% endif %}
+  </ul>
+  {% else %}
+  <p><em>No governance record — ingest completed before governance was enabled, or index missing.</em></p>
+  {% endif %}
+  {% if assessment %}
+  <p><strong>G2 assessment</strong> (candidates only, not a decision): {{ assessment.candidates|length }} candidate relation(s).</p>
+  {% endif %}
+</section>
+
+<section style="margin-top:1rem;">
+  <h2 style="font-size:1rem;">Fragments ({{ fragments|length }})</h2>
+  {% if fragments %}
+  <ul>
+    {% for f in fragments[:5] %}
+    <li><code>{{ f.id }}</code> — chunk {{ f.chunk_index }}</li>
+    {% endfor %}
+    {% if fragments|length > 5 %}<li>… {{ fragments|length - 5 }} more</li>{% endif %}
+  </ul>
+  {% else %}
+  <p>—</p>
+  {% endif %}
+</section>
+
+{% if governance_record %}
+<section style="margin-top:1rem;">
+  <h2 style="font-size:1rem;">Manual bootstrap (explicit)</h2>
+  <p>Choose how this document participates in the <strong>governed</strong> corpus. This updates disposition and projection lists; it does not silently approve the legacy document record.</p>
+  <form method="post" action="/workbench/project/corpus/document/{{ document_id }}/bootstrap">
+    <button type="submit" name="bootstrap_role" value="authoritative_active">Mark authoritative active</button>
+  </form>
+  <form method="post" action="/workbench/project/corpus/document/{{ document_id }}/bootstrap" style="margin-top:0.35rem;">
+    <button type="submit" name="bootstrap_role" value="supporting">Mark supporting</button>
+  </form>
+  <form method="post" action="/workbench/project/corpus/document/{{ document_id }}/bootstrap" style="margin-top:0.35rem;">
+    <button type="submit" name="bootstrap_role" value="pending_review">Mark pending review</button>
+  </form>
+</section>
+{% endif %}
+
+{% if projection %}
+<section style="margin-top:1rem;">
+  <h2 style="font-size:1rem;">Current projection snapshot</h2>
+  <p><code>retrieval_binding</code> = {{ projection.retrieval_binding.value }}</p>
+</section>
+{% endif %}
+{% endblock %}

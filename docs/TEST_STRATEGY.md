@@ -2,13 +2,35 @@
 
 This document applies to **Block 2** and subsequent local-first core work. It aligns with `docs/04_block_2_implementation_plan.md`, `docs/03_mvp_scope.md`, and ADR-001.
 
+**Product rebaseline (2026-04-18):** Primary UX targets **chat + evidence-backed citations + logic/audit panels**; the tree is **secondary**. Existing tests that exercise **tree persistence, retrieval, and Block 3 vertical flow** remain **required** for regression. New work should add **citation/assertion tests** for chat/orchestration paths when implemented. See `docs/11_product_rebaseline_local_ai_chat_first.md`, `docs/12_revised_execution_order_after_rebaseline.md`.
+
+**Phase R1 (2026-04-18):** `tests/test_local_assist_r1.py` covers `LocalAssistOrchestrator` — approved-corpus-only retrieval path, insufficient-evidence refusal, citation dict completeness, normative vs supporting authority classes, deterministic M5 hooks separate from citations, stable `local_assist_response_to_dict` serialization, project missing / empty query / overlong query, assumptions with non-citation authority note, proof orchestrator does not write workspace files.
+
+**Phase G0 (2026-04-18):** `tests/test_governance_g0.py` — governance enums/codecs round-trip, deterministic serialization, `GovernanceStore` persistence for active knowledge projection, document governance index, governance event log, JSON Schema validation failures, backward compatibility when `governance/` is absent, partial-file guard, `initialize_governance_baseline` idempotency, `governance/` directory created with new projects. Does **not** assert retrieval/orchestrator behavior (deferred until G4+ wiring).
+
+**Phase G1 (2026-04-18):** `tests/test_governance_g1.py` — governance records/events after ingest, analyzed vs classified terminal stages, explicit `promote_document_to_classified`, classification snapshot persistence + deterministic index JSON, schema validation errors on bad index, first ingest initializes governance baseline, **retrieval behavior unchanged** (`test_retrieval_behavior_unchanged_from_g1_ingest` mirrors normative corpus search).
+
+**Phase G2 (2026-04-18):** `tests/test_governance_g2.py` — duplicate candidate (reingest same bytes), narrow deterministic cases for supersession / supporting / contradiction + overlap, assessment persistence + stable JSON, schema validation failure on bad file, projects without assessment files, first-document empty corpus, **retrieval unchanged** after G2 ingest (`test_retrieval_unchanged_after_g2_ingest`).
+
+**Phase G3 (2026-04-18):** `tests/test_governance_g3.py` — duplicate proposal → approve updates excluded list + `g3.1` projection; contradiction proposal marks both documents **conflicting_unresolved**; stale index blocks approve; reject leaves projection lists unchanged; deterministic `truth_proposal_to_dict` JSON; missing proposal file returns `None`; **retrieval unchanged** after approval (`test_retrieval_unchanged_after_truth_proposal_approval`) when binding stays legacy (G3 default).
+
+**Phase G4 (2026-04-18):** `tests/test_governance_g4.py` — explicit **`explicit_projection`** binding uses only governed authoritative ids for normative retrieval (not `allowed_document_ids`); legacy default unchanged; `conflicting_unresolved` / missing index / empty authoritative refusal; `approved_ingested` distinct from normative explicit path; `LocalAssistOrchestrator` refusal codes + warnings; stable governance warning lines.
+
+**Phase U1 (2026-04-18):** `tests/test_workbench_u1.py` — workbench evidence panel (session project required), POST assist renders citations + provenance; legacy vs explicit projection visible in HTML; governance conflict refusal surfaced; fragment detail route returns full source text; deterministic hooks section distinguished from citations; missing session redirects to hub.
+
+**Phase G1.5 / U0 (2026-04-18):** `tests/test_workbench_corpus_bootstrap.py` — corpus bootstrap page session gating; multipart upload → `ingested`; duplicate → `duplicate_skipped`; unsupported extension → `unsupported_document_for_ingestion`; blank PDF → `ocr_deferred`; document detail + manual bootstrap actions (authoritative / supporting / pending_review); projection binding + legacy allow-list sync; `LocalAssistOrchestrator` after explicit projection + approved primary standard doc; deleted project session handling; `CorpusBootstrapError` on missing governance record.
+
+**Corpus readiness bridge (2026-04-18):** `tests/test_corpus_readiness_bridge.py` — `evaluate_document_readiness` unit cases (approval, primary classification, family mismatch, legacy allow-list, explicit projection membership / not-in-projection); evidence hint HTML for governance vs insufficient; HTTP detail shows readiness labels; E2E approve + metadata + bootstrap + sync → normative `LocalAssistOrchestrator` hit; evidence panel `readiness-hint` on insufficient query; unknown document redirects.
+
+**Governance + active truth (beyond G0):** Remaining gaps include **audit log immutability** tests and richer disposition transition coverage — see `docs/13_document_governance_and_active_truth_rebaseline.md`, `docs/14_detailed_revised_execution_order_with_governed_knowledge.md`. Existing tree and retrieval tests remain regression anchors.
+
 ---
 
 ## 1. Principles
 
 | Principle | Testing implication |
 |-----------|---------------------|
-| **Tree-first** | Integration tests anchor on project + tree persistence, not on document or chat convenience APIs alone. |
+| **Tree-first** | Integration tests anchor on project + tree persistence, not on document or chat convenience APIs alone. *(Rebaseline: tree remains **integration-critical**; **chat/citation-first** features need parallel tests when added.)* |
 | **Document-first / citation-first** | Assertions require **citation payloads** (document id, chunk/fragment id, excerpt fields) for any “evidence” result; “no evidence” must be a **structured** outcome, not an empty string. |
 | **Deterministic vs LLM** | Unit tests cover calculation and pure domain logic **without** network or LLM. If a future LLM layer exists, it is mocked or behind interfaces not invoked in default CI paths for core contracts. |
 | **Normativa activa** | Retrieval tests **must** include cases where inactive or non-allowed standards are excluded when the project context forbids them. |
@@ -58,6 +80,14 @@ Block 4A adds a **thin local frontend** (see `docs/09_block_4a_implementation_pl
 **M2 done:** FastAPI + Jinja2 shell — `tests/test_workbench_m2.py` (`/health`, `/workbench`, workspace env). Run: `python -m structural_tree_app.workbench` after `pip install -e ".[dev,workbench]"`.
 
 **M3 done:** Project hub + simple-span workflow — `tests/test_workbench_m3.py` (session `project_id`, `POST` workflow → persisted snapshot). Same install extra; optional `WORKBENCH_SESSION_SECRET` for signed session cookies.
+
+**M4 done:** Alternatives + characterization inspection — `tests/test_workbench_m4.py` (provenance constants, suggestion sections).
+
+**M5 done (workbench):** `tests/test_workbench_m5.py` — `POST /workbench/project/workflow/materialize` + `POST .../m5-run` drive `TreeWorkspace.materialize_working_branch_for_alternative` and `run_simple_span_m5_preliminary`; duplicate M5 error surfaced; persisted calc/check HTML; `simple_span_workflow_input.json` required (written on M3 setup).
+
+**M6 done (workbench):** `tests/test_workbench_m6.py` — `POST /workbench/project/workflow/compare` calls `BranchComparisonService` (live or `for_revision_snapshot` via hidden `context_revision_id`); `POST .../revision-create` + `?rev=` replay; last comparison persisted in `workbench_m6_last_comparison.json`; read-only proof (branch JSON unchanged); unknown revision query errors.
+
+**Windows dev launcher (optional):** `run_workbench.bat` or `scripts/run_workbench.ps1` — requires a local `.venv` with `pip install -e ".[dev,workbench]"`; sets default `STRUCTURAL_TREE_WORKSPACE` to `<repo>/workspace` and can pass `-Reload` for uvicorn autoreload (`WORKBENCH_RELOAD=1`). Same automated tests (`test_workbench_m*.py`) and manual smoke: `GET /health`, `GET /workbench`.
 
 **Planned validation (M3+)**
 

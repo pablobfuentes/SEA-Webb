@@ -1,0 +1,18 @@
+{
+  "project_id": "proj_2d2440288dc4",
+  "decision_node_id": "node_c249b245374a",
+  "prompt": "Select primary structural solution",
+  "criterion_ids": [],
+  "alternative_ids": [
+    "alt_6919069e5af5",
+    "alt_9760e2d4c635",
+    "alt_90330d2a5602",
+    "alt_4a6e7dd679e8"
+  ],
+  "selected_alternative_id": "alt_6919069e5af5",
+  "status": "open",
+  "rationale": "",
+  "id": "dec_04e1117d0426",
+  "created_at": "2026-04-18T19:05:37.495262+00:00",
+  "updated_at": "2026-04-18T19:05:37.779724+00:00"
+}

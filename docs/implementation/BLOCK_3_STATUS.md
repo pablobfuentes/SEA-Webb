@@ -18,3 +18,7 @@ Planning: `docs/06_block_3_implementation_plan.md` · Acceptance: `docs/07_block
 **Last updated:** Block 3 M7 (E2E vertical acceptance + validation report).
 
 **Frozen baseline:** Block 3 backend/domain is **closed** for feature work except **justified bugfixes** (changelog + review). The next implementation phase is **Block 4A** (validation workbench UI) — see `docs/09_block_4a_implementation_plan.md`; dependency context only — Block 3 services remain the source of truth.
+
+**Product rebaseline (2026-04-18):** Forward **UX** priority is **chat-first + evidence/audit** (see `docs/11_product_rebaseline_local_ai_chat_first.md`). This **does not** change Block 3 freeze or invalidate M1–M7 domain work — tree/workflows remain **infrastructure** for traceability and deterministic artifacts.
+
+**Governance roadmap (2026-04-18):** **Document governance + active truth** (see `docs/13_document_governance_and_active_truth_rebaseline.md`, `docs/14_detailed_revised_execution_order_with_governed_knowledge.md`) will extend **how** the approved corpus is defined for AI retrieval; Block 3 **domain** behavior remains frozen except justified bugfixes. M4/M5/M6 **provenance** rules stay aligned with retrieval authority; governance adds **project-level** disposition and projection **around** those services.

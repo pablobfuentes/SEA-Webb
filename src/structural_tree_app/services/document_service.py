@@ -374,6 +374,8 @@ class DocumentIngestionService:
 
         self._persist_document_bundle(doc, fragments)
         self._register_ingested_only(doc.id)
+        self._g1_apply_governance_post_ingest(doc, len(fragments), len(normalized))
+        self._g2_assess_corpus_post_g1(doc)
 
         return IngestionResult(
             status="ingested",
@@ -399,6 +401,33 @@ class DocumentIngestionService:
         if document_id not in project.ingested_document_ids:
             project.ingested_document_ids = [*project.ingested_document_ids, document_id]
         self.ps.save_project(project)
+
+    def _g1_apply_governance_post_ingest(
+        self, doc: Document, fragment_count: int, normalized_char_count: int
+    ) -> None:
+        from structural_tree_app.services.governance_document_pipeline import (
+            apply_governance_after_successful_ingestion,
+        )
+
+        apply_governance_after_successful_ingestion(
+            self.ps.governance_store(),
+            self.project_id,
+            doc,
+            fragment_count=fragment_count,
+            normalized_char_count=normalized_char_count,
+        )
+
+    def _g2_assess_corpus_post_g1(self, doc: Document) -> None:
+        from structural_tree_app.services.corpus_assessment_service import (
+            assess_and_persist_document_corpus_assessment,
+        )
+
+        assess_and_persist_document_corpus_assessment(
+            self.ps.governance_store(),
+            self,
+            self.project_id,
+            doc.id,
+        )
 
 
 def register_document_metadata_only(

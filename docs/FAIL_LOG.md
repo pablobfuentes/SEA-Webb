@@ -1,6 +1,6 @@
 # Failure log (structural_tree_app_foundation)
 
-Record failures during Block 2 **execution** (implementation milestones). Each entry should include: date, symptom, root cause, reproduction steps, fix or deferral, and link to changelog if applicable.
+Record failures during **implementation milestones** (Block 2 onward, including Block 4A workbench work). Each entry should include: date, symptom, root cause, reproduction steps, fix or deferral, and link to changelog if applicable.
 
 Planning-only steps that produce no runtime code may have no entries.
 
@@ -21,6 +21,18 @@ Planning-only steps that produce no runtime code may have no entries.
 ---
 
 ## Entries
+
+### 2026-04-18 — Accidental overwrite of `simple_span_workflow_input.schema.json` during 4A-M3
+
+| Field | Description |
+|-------|-------------|
+| **Date** | 2026-04-18 |
+| **Milestone** | Block 4A — M3 (workbench implementation session) |
+| **Failure** | `schemas/simple_span_workflow_input.schema.json` was briefly replaced with unrelated Python source during an agent edit. |
+| **Root cause** | Wrong target path when adding workbench route module content. |
+| **Reproduction** | Not applicable after restore — historical tooling/session error. |
+| **Fix attempt** | Restored file from git (`git restore schemas/simple_span_workflow_input.schema.json`); verified JSON schema validators still pass. |
+| **Status** | fixed |
 
 ### 2026-04-14 — M6 comparison fields missing for M5
 

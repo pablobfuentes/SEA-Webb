@@ -86,13 +86,46 @@ python -m pytest tests/ -q
 
 Requiere extras: `pip install -e ".[dev,workbench]"`.
 
-Arranque local:
+#### Primera vez (Windows)
+
+1. Abrir PowerShell en la raíz del repo (`structural_tree_app_foundation/`).
+2. Crear entorno e instalar en modo editable:
+   - `python -m venv .venv`
+   - `.\.venv\Scripts\Activate.ps1`
+   - `pip install -e ".[dev,workbench]"`
+
+#### Arranque diario (mínima fricción, Windows)
+
+- **Recomendado:** doble clic en `run_workbench.bat` en la raíz del repo, **o** en PowerShell: `.\scripts\run_workbench.ps1`
+- El launcher usa **solo** `.\.venv\Scripts\python.exe` (no mezcla con Python global). Si falta `.venv` o el paquete no importa, muestra un mensaje claro y sale con error.
+- Por defecto define `STRUCTURAL_TREE_WORKSPACE` a `<repo>\workspace` si no estaba definida, crea esa carpeta si hace falta, y tras ~2 s abre el navegador en `http://127.0.0.1:8000/workbench`.
+- En consola se imprimen las URLs del **hub** y de **`/health`** (comprobación rápida).
+
+Opciones del script:
+
+| Opción | Efecto |
+|--------|--------|
+| `-Reload` | Activa recarga automática (`WORKBENCH_RELOAD=1` → `uvicorn` **reload** al cambiar código). |
+| `-NoBrowser` | No abre el navegador (útil en CI o si el puerto ya está en uso). |
+| `-Port N` | Fija `WORKBENCH_PORT` (por defecto 8000). |
+
+Ejemplos: `.\scripts\run_workbench.ps1 -Reload` · `run_workbench.bat -Reload`
+
+#### Arranque manual (sin launcher)
 
 ```bash
 python -m structural_tree_app.workbench
 ```
 
-Por defecto escucha en `http://127.0.0.1:8000` — rutas `GET /health`, `GET /workbench` (hub de proyecto), `GET|POST /workbench/project/workflow` (M3: formulario vano simple → `setup_initial_workflow`). Variable `STRUCTURAL_TREE_WORKSPACE` define la raíz del workspace JSON (mismo contrato que `ProjectService`); `WORKBENCH_SESSION_SECRET` opcional para cookies de sesión. Ver `docs/09_block_4a_implementation_plan.md`.
+Mismo módulo que usa el launcher; útil si ya tienes el venv activado y variables a mano.
+
+#### Si el navegador muestra «connection failed» / no carga
+
+- El servidor **no está en marcha** hasta que la ventana donde ejecutaste el launcher siga abierta y **uvicorn** esté escuchando. Sin ese proceso, `http://127.0.0.1:8000` no responde.
+- Comprueba `http://127.0.0.1:8000/health` (debe devolver JSON con `"status":"ok"`). Si falla, revisa la consola del launcher (traceback, puerto ocupado, import roto).
+- Asegúrate de haber hecho `pip install -e ".[dev,workbench]"` **dentro de** `.venv`.
+
+Por defecto escucha en `http://127.0.0.1:8000` — rutas `GET /health`, `GET /workbench` (hub de proyecto), `GET|POST /workbench/project/workflow` (M3: setup del flujo vano simple; M4: inspección de alternativas; **M5:** `POST /workbench/project/workflow/materialize`, `POST /workbench/project/workflow/m5-run`; **M6:** `POST /workbench/project/workflow/compare`, `POST /workbench/project/workflow/revision-create`, y `GET /workbench/project/workflow?rev=<revision_id>` para comparación en snapshot de revisión); **G1.5/U0:** `GET /workbench/project/corpus` (subida de corpus, proyección gobernada), `POST /workbench/project/corpus/upload`, detalle y acciones bajo `/workbench/project/corpus/...`. Variable `STRUCTURAL_TREE_WORKSPACE` define la raíz del workspace JSON (mismo contrato que `ProjectService`); el launcher la fija por defecto a `workspace/` bajo el repo; puedes sobreescribirla antes de ejecutar. `WORKBENCH_SESSION_SECRET` opcional para cookies de sesión. Ver `docs/09_block_4a_implementation_plan.md`.
 
 **Block 3 M3 — flujo a vano simple (miembro de acero primario):** `SimpleSpanSteelWorkflowService.setup_initial_workflow` en `structural_tree_app.services.simple_span_steel_workflow` crea el nodo raíz, la primera decisión y alternativas persistidas (véase `docs/implementation/BLOCK_3_STATUS.md`).
 

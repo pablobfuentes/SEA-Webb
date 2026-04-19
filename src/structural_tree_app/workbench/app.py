@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 
 from structural_tree_app.workbench.config import ENV_WORKSPACE, get_session_secret, get_workspace_path
+from structural_tree_app.workbench.corpus_pages import router as corpus_router
 from structural_tree_app.workbench.pages import router as workbench_router
 
 
@@ -24,6 +25,7 @@ def create_app() -> FastAPI:
         same_site="lax",
     )
     app.include_router(workbench_router)
+    app.include_router(corpus_router)
 
     @app.get("/health", tags=["meta"])
     def health() -> JSONResponse:

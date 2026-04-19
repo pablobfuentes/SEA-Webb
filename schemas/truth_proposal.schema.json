@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TruthProposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "proposal_id",
+    "project_id",
+    "subject_document_id",
+    "created_at",
+    "status",
+    "source_assessment_schema_version",
+    "rules_applied",
+    "projection_delta",
+    "disposition_changes",
+    "narrative",
+    "decision"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^g3\\.[0-9]+$"
+    },
+    "proposal_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "subject_document_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "created_at": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["pending_approval", "approved", "rejected"]
+    },
+    "source_assessment_schema_version": { "type": "string", "minLength": 1 },
+    "rules_applied": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "narrative": { "type": "string" },
+    "projection_delta": { "$ref": "#/$defs/projection_delta" },
+    "disposition_changes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/disposition_change" }
+    },
+    "decision": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/decision" }]
+    }
+  },
+  "$defs": {
+    "projection_delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "add_authoritative_document_ids",
+        "remove_authoritative_document_ids",
+        "add_supporting_document_ids",
+        "remove_supporting_document_ids",
+        "add_excluded_document_ids",
+        "remove_excluded_document_ids"
+      ],
+      "properties": {
+        "add_authoritative_document_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "remove_authoritative_document_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "add_supporting_document_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "remove_supporting_document_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "add_excluded_document_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "remove_excluded_document_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "disposition_change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "document_id",
+        "from_disposition",
+        "to_disposition",
+        "rationale_rule_id"
+      ],
+      "properties": {
+        "document_id": { "type": "string", "minLength": 1 },
+        "from_disposition": { "type": "string", "minLength": 1 },
+        "to_disposition": { "type": "string", "minLength": 1 },
+        "rationale_rule_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "decided_at", "actor", "notes"],
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": ["approved", "rejected"]
+        },
+        "decided_at": { "type": "string", "minLength": 1 },
+        "actor": { "type": "string", "minLength": 1 },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

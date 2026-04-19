@@ -1,6 +1,6 @@
 Project: Structural Engineering App
 Leyenda: [x] = cubierto o verificado en structural_tree_app_foundation (documentacion PBS en docs/ y nucleo Block 2). [ ] = pendiente o fuera del alcance actual del foundation.
-Seguimiento Block 3 (viga acero, claro simple): §18.
+Seguimiento Block 3 (viga acero, claro simple): §18. Block 4A (workbench UI validacion): §19.
 
 
 ## 0. Definicion del producto y reglas rectoras
@@ -701,3 +701,81 @@ Seguimiento Block 3 (viga acero, claro simple): §18.
   - [x] Calculos deterministicos preliminares de comprobacion (M5) — senal de workflow, no idoneidad completa
   - [x] Enriquecimiento comparativo de ramas (M6) — proyeccion M5 y fuentes de campo explicitas
   - [x] Flujo vertical E2E validado (M7) — `tests/test_block3_vertical_flow.py`, informe `docs/08_block_3_validation_report.md`
+
+## 19. Block 4A — Workbench de validacion (UI minima, FastAPI + Jinja)
+
+Capa frontal **local e intencionalmente modesta** sobre los servicios ya implementados en Block 3. No sustituye la UI de producto; sirve para validar el flujo por interaccion humana y para inspeccionar estado persistido con fronteras de autoridad visibles.
+
+**Referencias de implementacion:** `docs/09_block_4a_implementation_plan.md`, `docs/implementation/BLOCK_4A_STATUS.md`, `docs/10_block_4a_acceptance_snapshot.md`, `README.md` (seccion workbench). Codigo: paquete `src/structural_tree_app/workbench/`. Instalacion: `pip install -e ".[dev,workbench]"`. Arranque: `python -m structural_tree_app.workbench` (por defecto `http://127.0.0.1:8000`).
+
+**Registro de incidentes:** `docs/FAIL_LOG.md` (p. ej. restauracion accidental de `schemas/simple_span_workflow_input.schema.json` durante sesion 4A-M3). **Historial de cambios:** `docs/CHANGELOG.md` seccion [Unreleased] Block 4A M2–M4.
+
++ 19.1 Alcance y limites actuales
+  - [x] Workbench es solo **validacion**: banner "Validation workbench — not production UI" en plantillas base
+  - [x] Sin logica de dominio duplicada en rutas: handlers finos llaman `ProjectService`, `SimpleSpanSteelWorkflowService`, lecturas via `TreeStore` en `workflow_summary.py`
+  - [x] Estado de sesion **solo punteros** (`project_id` en cookie firmada); `STRUCTURAL_TREE_WORKSPACE` define raiz JSON; opcional `WORKBENCH_SESSION_SECRET` para cookies en entornos no locales
+  - [ ] Sin UI de materializar rama, M5, M6 comparacion ni revision replay (milestones 4A-M5+)
+
++ 19.2 Block 4A-M2 — Shell de aplicacion
+  - [x] `GET /health` — JSON con estado, ruta de workspace, variable de entorno del workspace
+  - [x] `GET /` redirige a `GET /workbench`
+  - [x] Plantilla base `base.html` y dependencias opcionales en `pyproject.toml` (grupo `workbench`: fastapi, uvicorn, jinja2, python-multipart)
+  - [x] Pruebas automaticas: `tests/test_workbench_m2.py`
+
++ 19.3 Block 4A-M3 — Proyecto y setup workflow vano simple
+  - [x] Hub `GET /workbench`: crear proyecto, abrir por `project_id`, cerrar puntero de sesion, enlace al workflow
+  - [x] `GET|POST /workbench/project/workflow`: formulario `SimpleSpanWorkflowInput` → `SimpleSpanSteelWorkflowService.setup_initial_workflow` (POST 303 → GET)
+  - [x] Vista minima del estado persistido tras setup (ids de problema, decision, alternativas)
+  - [x] Pruebas: `tests/test_workbench_m3.py`
+
++ 19.4 Block 4A-M4 — Inspeccion de alternativas, sugerencias y caracterizacion
+  - [x] Listado de **todas** las alternativas persistidas; secciones **sugeridas (ranking M3.1)** vs **elegibles no sugeridas** vs lista ordenada completa
+  - [x] Columnas de metadata de sugerencia: `suggested`, `suggestion_rank`, `suggestion_score`, `suggestion_provenance` (texto aclara: heuristica de workflow, no idoneidad)
+  - [x] Por alternativa: `<details>` con descripcion, tabla de `characterization_items` (polaridad, provenencia **raw** + encabezado legible, texto, `reference_id`, `retrieval_query`, `citation_authority`)
+  - [x] Leyenda de clases de provenencia (`workflow_heuristic`, `retrieval_backed`, `manual_placeholder`, `not_yet_evidenced`) sin mezclar categorias
+  - [x] Con corpus vacio tipico: predominan `workflow_heuristic`, `manual_placeholder`, `not_yet_evidenced`; `retrieval_backed` solo si hubo hit de recuperacion persistido
+  - [x] Pruebas: `tests/test_workbench_m4.py`
+
++ 19.5 Pendientes Block 4A (M5–M7 en plan)
+  - [ ] 4A-M5 — Paneles de ramas / arbol (solo lectura)
+  - [ ] 4A-M6 — Materializar rama + ejecutar M5 preliminar desde UI
+  - [ ] 4A-M7 — Comparacion M6 + revision replay + E2E workbench
+
++ 19.6 Prueba manual por UI (que hacer, que esperar, que revisar)
+
+**Preparacion (una vez por entorno)**
+
+1. Desde la raiz del repo `structural_tree_app_foundation`: `pip install -e ".[dev,workbench]"`.
+2. Opcional: `set STRUCTURAL_TREE_WORKSPACE=ruta\absoluta\workspace` (si no, se usa `workspace` resuelto desde el cwd).
+3. Opcional: `set WORKBENCH_SESSION_SECRET=...` (en dev puede omitirse; hay secreto por defecto solo para local).
+
+**Arranque:** `python -m structural_tree_app.workbench` → abrir navegador en `http://127.0.0.1:8000`.
+
+**A. Comprobar shell (M2)**
+
+- Ir a `http://127.0.0.1:8000/health` (o usar cliente HTTP). **Esperar:** JSON `"status":"ok"`, `"workspace_path"` coherente con el env.
+- Ir a `/` → debe redirigir a `/workbench`. **Esperar:** pagina hub con texto "Validation workbench", ruta del workspace, linea `pip install -e ".[dev,workbench]"`.
+
+**B. Proyecto y setup workflow (M3)**
+
+- En `/workbench`, rellenar **Create project** (nombre obligatorio) y enviar. **Esperar:** redireccion con mensaje; en "Session pointer" aparece un `project_id` (prefijo tipo `proj_...`).
+- Pulsar enlace **Simple-span workflow** o ir a `/workbench/project/workflow`. **Esperar:** formulario "Setup inputs" con `span_m`, `support_condition` fijo `simple_span`, etc.
+- Enviar formulario (valores por defecto o propios). **Esperar:** redireccion; al recargar la misma URL, desaparece el formulario y aparece seccion **Persisted workflow** con `workflow_id`, ids de nodo raiz, decision, y tablas/listas de alternativas (estado minimo M3; en M4 se enriquece la misma vista).
+
+**C. Inspeccion M4 (alternativas y provenencia)**
+
+- Con workflow ya creado, en `/workbench/project/workflow` **esperar:**
+  - Caja **Authority & provenance** con lista de cuatro provenencias y valores `code` raw.
+  - Conteos: total de alternativas, cuantas con `suggested=true`, cuantas elegibles sin estar en el top-K sugerido.
+  - Secciones **Suggested alternatives**, **Eligible alternatives (not in top suggestion set)** si aplica, y **All alternatives**.
+  - Cada alternativa en `<details>`: tabla de sugerencia (`suggestion_provenance` en monospace) y tabla de **Characterization items** con filas por item; comprobar que no se mezclan etiquetas (cada fila muestra provenencia raw + columna de encabezado).
+- **Que buscar (calidad):** sin corpus ingerido, es normal ver `not_yet_evidenced` en items de recuperacion; con hit de corpus pueden aparecer `retrieval_backed` y `reference_id`. Los textos de sugerencia en alternativa siguen siendo metadata de ranking, no verificacion estructural.
+
+**D. Errores y mensajes**
+
+- Abrir `/workbench/project/workflow` sin proyecto en sesion → redireccion al hub con `err` en query. **Esperar:** mensaje de error legible, no crash.
+- Intentar segundo `POST` de setup sobre el mismo proyecto con arbol ya creado → **esperar:** mensaje de error del backend (workflow duplicado), no estado silencioso.
+
+**E. Automatizacion (CI / regresion)**
+
+- Ejecutar `python -m pytest tests/ -q` — incluye `test_workbench_m2.py`, `test_workbench_m3.py`, `test_workbench_m4.py` y suite Block 3.

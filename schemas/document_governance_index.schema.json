@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DocumentGovernanceIndex",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project_id",
+    "updated_at",
+    "by_document_id"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["g0.1", "g1.1"]
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "updated_at": { "type": "string", "minLength": 1 },
+    "by_document_id": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "document_id",
+          "pipeline_stage",
+          "disposition",
+          "updated_at",
+          "notes"
+        ],
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z]+_[a-f0-9]{12}$"
+          },
+          "pipeline_stage": {
+            "type": "string",
+            "enum": [
+              "ingested",
+              "analyzed",
+              "classified",
+              "compared",
+              "assessed",
+              "proposed"
+            ]
+          },
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "pending_review",
+              "active",
+              "supporting",
+              "superseded",
+              "conflicting_unresolved",
+              "rejected"
+            ]
+          },
+          "updated_at": { "type": "string", "minLength": 1 },
+          "notes": { "type": "string" },
+          "analysis": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["fragment_count", "normalized_char_count"],
+                "properties": {
+                  "fragment_count": { "type": "integer", "minimum": 0 },
+                  "normalized_char_count": { "type": "integer", "minimum": 0 }
+                }
+              }
+            ]
+          },
+          "classification": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "normative_classification",
+                  "authority_level",
+                  "standard_family",
+                  "discipline",
+                  "topic_scope_tags",
+                  "classification_incomplete"
+                ],
+                "properties": {
+                  "normative_classification": {
+                    "type": "string",
+                    "enum": [
+                      "unknown",
+                      "primary_standard",
+                      "supporting_document",
+                      "reference_document"
+                    ]
+                  },
+                  "authority_level": {
+                    "type": "string",
+                    "enum": ["primary", "complementary", "contextual"]
+                  },
+                  "standard_family": {
+                    "oneOf": [{ "type": "null" }, { "type": "string" }]
+                  },
+                  "discipline": {
+                    "oneOf": [{ "type": "null" }, { "type": "string" }]
+                  },
+                  "topic_scope_tags": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "classification_incomplete": { "type": "boolean" }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

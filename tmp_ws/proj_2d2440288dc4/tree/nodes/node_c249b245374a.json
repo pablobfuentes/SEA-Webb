@@ -1,0 +1,18 @@
+{
+  "project_id": "proj_2d2440288dc4",
+  "branch_id": "branch_9f6a3aecf366",
+  "node_type": "decision",
+  "title": "Select primary structural solution",
+  "description": "Nodo de bifurcación",
+  "parent_node_id": "node_73b45fe6cf5e",
+  "state": "open",
+  "order_index": 0,
+  "depth": 1,
+  "id": "node_c249b245374a",
+  "child_node_ids": [],
+  "linked_reference_ids": [],
+  "linked_calculation_ids": [],
+  "linked_assumption_ids": [],
+  "created_at": "2026-04-18T19:05:37.495262+00:00",
+  "updated_at": "2026-04-18T19:05:37.495262+00:00"
+}

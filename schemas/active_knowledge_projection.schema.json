@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ActiveKnowledgeProjection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project_id",
+    "updated_at",
+    "retrieval_binding",
+    "authoritative_document_ids",
+    "supporting_document_ids",
+    "excluded_from_authoritative_document_ids",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["g0.1", "g3.1"]
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "updated_at": { "type": "string", "minLength": 1 },
+    "retrieval_binding": {
+      "type": "string",
+      "enum": ["legacy_allowed_documents", "explicit_projection"]
+    },
+    "authoritative_document_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "supporting_document_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "excluded_from_authoritative_document_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "notes": { "type": "string" }
+  }
+}

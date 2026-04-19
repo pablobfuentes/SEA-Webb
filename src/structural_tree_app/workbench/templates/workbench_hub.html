@@ -17,6 +17,8 @@
   {% if current_project_id %}
   <p>Current <code>project_id</code>: <code>{{ current_project_id }}</code> ({{ current_project_name or "?" }})</p>
   <p><a href="/workbench/project/workflow">Simple-span workflow (M3)</a></p>
+  <p><a href="/workbench/project/evidence">Evidence panel (U1 — local assist)</a></p>
+  <p><a href="/workbench/project/corpus">Corpus bootstrap (G1.5 — upload &amp; governance)</a></p>
   <form method="post" action="/workbench/project/close" style="margin-top:0.5rem;">
     <button type="submit">Clear project pointer</button>
   </form>

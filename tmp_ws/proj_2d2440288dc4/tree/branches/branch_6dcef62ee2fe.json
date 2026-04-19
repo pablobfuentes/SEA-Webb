@@ -1,0 +1,16 @@
+{
+  "project_id": "proj_2d2440288dc4",
+  "title": "Working path — Truss (celosía)",
+  "description": "Materialized branch for the selected alternative (M4 scaffold). Extend with assumptions and M5 checks; not an adequacy conclusion.",
+  "origin_decision_node_id": "node_c249b245374a",
+  "origin_alternative_id": "alt_6919069e5af5",
+  "root_node_id": "node_10391bd7a167",
+  "state": "active",
+  "parent_branch_id": "branch_9f6a3aecf366",
+  "cloned_from_branch_id": null,
+  "reactivated_from_branch_id": null,
+  "comparison_tags": [],
+  "id": "branch_6dcef62ee2fe",
+  "created_at": "2026-04-18T19:05:37.770746+00:00",
+  "updated_at": "2026-04-18T19:05:37.810249+00:00"
+}

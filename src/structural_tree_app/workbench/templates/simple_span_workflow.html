@@ -1,6 +1,51 @@
 {% extends "base.html" %}
+
+{% macro alt_details_list(alts, legend, top_k) %}
+  {% for a in alts %}
+  <details style="margin:0.5rem 0;border:1px solid #ccc;padding:0.35rem 0.5rem;background:#fff;">
+    <summary style="cursor:pointer;font-weight:600;">{{ a.title }} <code style="font-weight:400;">{{ a.id }}</code>
+      {% if a.suggested %}<span style="background:#e8f5e9;padding:0.05rem 0.35rem;font-size:0.8rem;">suggested rank {{ a.suggestion_rank }}</span>{% else %}<span style="background:#f5f5f5;padding:0.05rem 0.35rem;font-size:0.8rem;">eligible, not top-{{ top_k }} suggestion</span>{% endif %}
+    </summary>
+    <p style="font-size:0.88rem;margin:0.35rem 0;"><code>catalog_key</code>: {% if a.catalog_key %}<code>{{ a.catalog_key }}</code>{% else %}—{% endif %}</p>
+    <p style="font-size:0.88rem;margin:0.25rem 0;"><strong>Description</strong> (persisted): {{ a.description }}</p>
+    <table border="1" cellpadding="4" style="border-collapse:collapse;font-size:0.85rem;margin:0.35rem 0;">
+      <thead><tr><th>suggested</th><th>rank</th><th>score</th><th>suggestion_provenance (raw)</th></tr></thead>
+      <tbody><tr>
+        <td>{{ a.suggested }}</td>
+        <td>{{ a.suggestion_rank if a.suggestion_rank is not none else "—" }}</td>
+        <td>{{ a.suggestion_score if a.suggestion_score is not none else "—" }}</td>
+        <td><code>{{ a.suggestion_provenance }}</code></td>
+      </tr></tbody>
+    </table>
+    <h4 style="font-size:0.9rem;margin:0.5rem 0 0.25rem;">Characterization items (M4)</h4>
+    {% if a.characterization_items|length == 0 %}
+    <p style="font-size:0.85rem;color:#666;"><em>No characterization_items persisted for this alternative.</em></p>
+    {% else %}
+    <table border="1" cellpadding="4" style="border-collapse:collapse;font-size:0.82rem;width:100%;">
+      <thead>
+        <tr><th>polarity</th><th>provenance (raw)</th><th>heading</th><th>text</th><th>reference_id</th><th>retrieval_query</th><th>citation_authority</th></tr>
+      </thead>
+      <tbody>
+        {% for item in a.characterization_items %}
+        <tr>
+          <td><code>{{ item.polarity }}</code></td>
+          <td><code>{{ item.provenance }}</code></td>
+          <td>{% for row in legend %}{% if row.raw == item.provenance %}{{ row.heading }}{% endif %}{% endfor %}</td>
+          <td style="max-width:28rem;">{{ item.text }}</td>
+          <td>{% if item.reference_id %}<code>{{ item.reference_id }}</code>{% else %}—{% endif %}</td>
+          <td style="max-width:12rem;">{% if item.retrieval_query %}<code>{{ item.retrieval_query }}</code>{% else %}—{% endif %}</td>
+          <td>{% if item.citation_authority %}<code>{{ item.citation_authority }}</code>{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </details>
+  {% endfor %}
+{% endmacro %}
+
 {% block title %}Simple-span workflow{% endblock %}
-{% block heading %}Simple-span steel workflow (M3){% endblock %}
+{% block heading %}Simple-span steel workflow (M3–M4 + M5 + M6 comparison / revision){% endblock %}
 {% block content %}
 <p><a href="/workbench">← Project hub</a></p>
 
@@ -14,28 +59,190 @@
 {% if err %}<p role="alert" style="color:#600;"><strong>Error:</strong> {{ err }}</p>{% endif %}
 
 {% if snapshot %}
+<section style="margin-top:1rem;border:1px dashed #888;padding:0.5rem 0.75rem;background:#fafafa;">
+  <h2 style="font-size:1rem;margin-top:0;">Authority &amp; provenance (do not merge categories)</h2>
+  <p style="font-size:0.88rem;margin:0.25rem 0 0.5rem;">Characterization rows below are <strong>qualitative claims</strong> with explicit <code>provenance</code> from storage. <strong>M5 preliminary</strong> deterministic outputs are in a <strong>separate section below</strong> — do not merge with characterization or suggestion metadata.</p>
+  <ul style="font-size:0.88rem;margin:0;padding-left:1.2rem;">
+    {% for row in provenance_legend %}
+    <li><strong>{{ row.heading }}</strong> — backend value <code>{{ row.raw }}</code></li>
+    {% endfor %}
+  </ul>
+  <p style="font-size:0.85rem;color:#444;margin:0.5rem 0 0;"><strong>Alternative suggestion fields</strong> (<code>suggested</code>, <code>suggestion_rank</code>, <code>suggestion_score</code>, <code>suggestion_provenance</code>) reflect <strong>M3.1 workflow ranking heuristics</strong>, not design adequacy. Raw strings are shown in monospace.</p>
+</section>
+
 <section style="margin-top:1rem;">
   <h2 style="font-size:1rem;">Persisted workflow (read from storage)</h2>
-  <p><code>workflow_id</code>: <code>{{ snapshot.workflow_id }}</code></p>
+  <p><code>workflow_id</code>: <code>{{ snapshot.workflow_id }}</code> · <code>suggested_top_k</code> (domain constant): {{ snapshot.suggested_top_k }}</p>
   <p><code>main_branch_id</code>: <code>{{ snapshot.main_branch_id }}</code></p>
   <p>Root problem: <code>{{ snapshot.root_problem_node_id }}</code> — {{ snapshot.root_problem_title }}</p>
   <p>Decision node: <code>{{ snapshot.decision_node_id }}</code> · decision row <code>{{ snapshot.decision_id }}</code></p>
   <p>Prompt: {{ snapshot.decision_prompt }}</p>
-  <h3 style="font-size:0.95rem;">Alternatives</h3>
-  <table border="1" cellpadding="4" style="border-collapse:collapse;font-size:0.9rem;">
-    <thead><tr><th>id</th><th>title</th><th>catalog_key</th><th>suggested</th><th>rank</th></tr></thead>
-    <tbody>
-    {% for a in snapshot.alternatives %}
-      <tr>
-        <td><code>{{ a.id }}</code></td>
-        <td>{{ a.title }}</td>
-        <td>{% if a.catalog_key %}<code>{{ a.catalog_key }}</code>{% else %}—{% endif %}</td>
-        <td>{{ a.suggested }}</td>
-        <td>{{ a.suggestion_rank if a.suggestion_rank is not none else "—" }}</td>
-      </tr>
+
+  <p style="font-size:0.9rem;"><strong>Counts:</strong> {{ snapshot.alternatives|length }} alternative(s) total;
+    {{ snapshot.suggested_alternatives|length }} with <code>suggested=true</code> (top-{{ snapshot.suggested_top_k }} set when ranked);
+    {{ snapshot.other_eligible_alternatives|length }} eligible but not in that suggestion set.</p>
+
+  {% if snapshot.suggested_alternatives|length > 0 %}
+  <h3 style="font-size:0.95rem;">Suggested alternatives (workflow ranking)</h3>
+  <p style="font-size:0.85rem;color:#333;">Ordered by <code>suggestion_rank</code> ascending.</p>
+  {{ alt_details_list(snapshot.suggested_alternatives, provenance_legend, snapshot.suggested_top_k) }}
+  {% endif %}
+
+  {% if snapshot.other_eligible_alternatives|length > 0 %}
+  <h3 style="font-size:0.95rem;">Eligible alternatives (not in top suggestion set)</h3>
+  {{ alt_details_list(snapshot.other_eligible_alternatives, provenance_legend, snapshot.suggested_top_k) }}
+  {% endif %}
+
+  <h3 style="font-size:0.95rem;">All alternatives (single ordered list)</h3>
+  <p style="font-size:0.85rem;">Same rows as above, in display order (suggested first by rank, then others by title).</p>
+  {{ alt_details_list(snapshot.alternatives, provenance_legend, snapshot.suggested_top_k) }}
+</section>
+
+<section style="margin-top:1rem;border:2px solid #a63;padding:0.75rem;background:#fffaf5;">
+  <h2 style="font-size:1rem;margin-top:0;">M5 — Materialize working branch &amp; preliminary deterministic run</h2>
+  <p style="font-size:0.88rem;margin:0 0 0.5rem;"><strong>Scope boundary:</strong> Actions use the same Block 3 services as automated tests (materialize working branch, then M5 preliminary). Outputs are <strong>preliminary deterministic workflow signals</strong> (<code>method_label</code> = <code>{{ m5_method_label }}</code>) — <strong>not</strong> code-compliant design, <strong>not</strong> final structural adequacy, <strong>not</strong> retrieval-backed proof.</p>
+  {% if workflow_input_missing %}
+  <p role="alert" style="color:#800;font-weight:600;">Persisted <code>simple_span_workflow_input.json</code> missing (project created before this file was written). M5 cannot run until you re-submit <strong>Setup inputs</strong> on a new project or restore the JSON file.</p>
+  {% endif %}
+
+  <h3 style="font-size:0.95rem;">1) Materialize (per alternative)</h3>
+  <p style="font-size:0.85rem;color:#333;">Each form creates a working branch linked to one persisted alternative (Block 3 model). Repeat for multiple alternatives if needed.</p>
+  <ul style="list-style:none;padding:0;margin:0;">
+  {% for a in snapshot.alternatives %}
+    <li style="margin:0.35rem 0;">
+      <form method="post" action="/workbench/project/workflow/materialize" style="display:inline;">
+        <input type="hidden" name="alternative_id" value="{{ a.id }}">
+        <button type="submit">Materialize working branch</button>
+        <span style="font-size:0.88rem;"> — {{ a.title }} <code>{{ a.id }}</code></span>
+      </form>
+    </li>
+  {% endfor %}
+  </ul>
+
+  <h3 style="font-size:0.95rem;margin-top:1rem;">2) Run M5 preliminary (per materialized branch)</h3>
+  {% if materialized_branches|length == 0 %}
+  <p style="font-size:0.88rem;color:#555;"><em>No materialized working branches yet — use step 1.</em></p>
+  {% endif %}
+  {% for mb in materialized_branches %}
+  <div style="border:1px solid #888;margin:0.6rem 0;padding:0.5rem;background:#fff;">
+    <p style="margin:0.25rem 0;"><strong>Branch</strong> <code>{{ mb.row.branch_id }}</code> — {{ mb.row.title }}</p>
+    <p style="font-size:0.88rem;margin:0.25rem 0;">Origin alternative: {{ mb.row.alternative_title }} (<code>{{ mb.row.origin_alternative_id }}</code>) · <code>catalog_key</code>: {% if mb.row.catalog_key %}<code>{{ mb.row.catalog_key }}</code>{% else %}—{% endif %}</p>
+    <form method="post" action="/workbench/project/workflow/m5-run" style="margin:0.35rem 0;">
+      <input type="hidden" name="working_branch_id" value="{{ mb.row.branch_id }}">
+      <button type="submit">Run M5 preliminary on this branch</button>
+    </form>
+    {% if mb.m5_view %}
+    <div style="margin-top:0.5rem;padding:0.35rem;background:#f6f6f6;border:1px dashed #666;">
+      <p style="font-size:0.85rem;margin:0 0 0.35rem;"><strong>Persisted Calculation</strong> (read-only) — objective: {{ mb.m5_view.calculation.objective }}</p>
+      <p style="font-size:0.82rem;margin:0;"><code>method_label</code>: <code>{{ mb.calc_display.method_label }}</code> · status <code>{{ mb.calc_display.status }}</code></p>
+      <pre style="font-size:0.75rem;overflow:auto;max-height:14rem;">{{ mb.calc_display | tojson(indent=2) }}</pre>
+      <p style="font-size:0.85rem;margin:0.5rem 0 0.25rem;"><strong>Checks</strong> (preliminary)</p>
+      {% for ch in mb.checks_display %}
+      <pre style="font-size:0.75rem;overflow:auto;">{{ ch | tojson(indent=2) }}</pre>
+      {% endfor %}
+      <p style="font-size:0.85rem;margin:0.5rem 0 0.25rem;"><strong>Assumptions</strong> (M5 echo / tags)</p>
+      {% for ad in mb.assumptions_display %}
+      <pre style="font-size:0.75rem;">{{ ad | tojson(indent=2) }}</pre>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="font-size:0.85rem;color:#444;margin:0.35rem 0 0;"><em>No M5 Calculation with this <code>method_label</code> on the path root yet — run step 2, or backend refused duplicate.</em></p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>
+
+<section style="margin-top:1rem;border:2px solid #369;padding:0.75rem;background:#f8fbff;">
+  <h2 style="font-size:1rem;margin-top:0;">M6 — Branch comparison &amp; revision snapshot (read-only)</h2>
+  {% if m6_view_mode == "revision_snapshot" %}
+  <p role="status" style="background:#e3f2fd;padding:0.35rem 0.5rem;font-weight:600;margin:0 0 0.5rem;">
+    <strong>Revision-backed view:</strong> comparing branches from immutable snapshot <code>{{ m6_revision_id }}</code> — not live workspace state.
+    <a href="/workbench/project/workflow">Switch to live project tree</a>
+  </p>
+  {% else %}
+  <p style="font-size:0.88rem;margin:0 0 0.5rem;"><strong>Live workspace:</strong> comparison reads current on-disk tree. Creating a revision snapshots live state for later replay; it does not replace live files.</p>
+  {% endif %}
+
+  <p style="font-size:0.85rem;color:#333;margin:0.5rem 0;">
+    Comparison does <strong>not</strong> mutate branches, activate alternatives, or rerun M5. It only reads persisted rows via <code>BranchComparisonService.compare_branches</code>.
+  </p>
+
+  <div style="border:1px solid #999;padding:0.5rem;margin:0.5rem 0;background:#fff;">
+    <h3 style="font-size:0.95rem;margin-top:0;">Authority &amp; field categories (do not merge)</h3>
+    <p style="font-size:0.82rem;margin:0 0 0.35rem;"><code>citation_trace_authority</code> on results is <strong>internal_trace_only</strong> — reference ids are hooks for engineering review, <strong>not</strong> authoritative citation output. Use retrieval + <code>CitationPayload</code> for normative excerpts.</p>
+    <p style="font-size:0.82rem;margin:0 0 0.35rem;"><strong>M5 fields</strong> in comparison rows are <strong>preliminary deterministic workflow signals</strong> — not code compliance or final adequacy.</p>
+    <p style="font-size:0.82rem;margin:0 0 0.5rem;"><strong>document_trace_pending</strong> / citation traces with <code>resolution_status=ids_only</code> are not completed citations.</p>
+    <h4 style="font-size:0.88rem;">comparison_field_sources (keys)</h4>
+    <ul style="font-size:0.8rem;margin:0;padding-left:1.2rem;">
+      {% for key, label in comparison_field_source_legend %}
+      <li><code>{{ key }}</code> — {{ label }}</li>
+      {% endfor %}
+    </ul>
+    <h4 style="font-size:0.88rem;">metric_provenance (per-row)</h4>
+    <ul style="font-size:0.8rem;margin:0;padding-left:1.2rem;">
+      {% for key, label in metric_provenance_legend %}
+      <li><code>{{ key }}</code> — {{ label }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <h3 style="font-size:0.95rem;">Revisions</h3>
+  {% if revisions_list|length == 0 %}
+  <p style="font-size:0.85rem;"><em>No revisions yet — create one below (live view only).</em></p>
+  {% else %}
+  <ul style="font-size:0.85rem;">
+    {% for r in revisions_list %}
+    <li><a href="/workbench/project/workflow?rev={{ r.id }}"><code>{{ r.id }}</code></a> — {{ r.created_at }} — {{ r.rationale }}</li>
     {% endfor %}
-    </tbody>
-  </table>
+  </ul>
+  {% endif %}
+
+  {% if m6_view_mode == "live" %}
+  <form method="post" action="/workbench/project/workflow/revision-create" style="margin:0.5rem 0;">
+    <label>Rationale <input name="rationale" style="min-width:18rem;" placeholder="Workbench snapshot"></label>
+    <button type="submit">Create revision snapshot</button>
+  </form>
+  {% else %}
+  <p style="font-size:0.85rem;color:#555;"><em>Revision creation is disabled in revision-backed view (snapshots are immutable).</em></p>
+  {% endif %}
+
+  <h3 style="font-size:0.95rem;">Compare branches</h3>
+  <p style="font-size:0.85rem;">Select at least two branch ids (same ordering as checkboxes → service).</p>
+  <form method="post" action="/workbench/project/workflow/compare">
+    <input type="hidden" name="context_revision_id" value="{{ m6_revision_id or '' }}">
+    {% if branch_ids_for_m6|length == 0 %}
+    <p style="font-size:0.85rem;color:#666;"><em>No branches in this store context.</em></p>
+    {% else %}
+    <ul style="list-style:none;padding:0;margin:0;">
+      {% for bid in branch_ids_for_m6 %}
+      <li style="margin:0.25rem 0;">
+        <label><input type="checkbox" name="branch_ids" value="{{ bid }}"> <code>{{ bid }}</code></label>
+      </li>
+      {% endfor %}
+    </ul>
+    <p style="margin:0.5rem 0;"><button type="submit">Run comparison (read-only)</button></p>
+    {% endif %}
+  </form>
+
+  {% if m6_comparison_dict %}
+  <div style="margin-top:0.75rem;border:1px dashed #333;padding:0.5rem;background:#fafafa;">
+    <p style="font-size:0.85rem;margin:0 0 0.35rem;"><strong>Last comparison result</strong>
+      {% if m6_view_mode == "revision_snapshot" %}<span style="background:#e3f2fd;">(computed in revision context <code>{{ m6_revision_id }}</code>)</span>{% else %}<span style="background:#e8f5e9;">(live tree context)</span>{% endif %}
+    </p>
+    <p style="font-size:0.8rem;margin:0 0 0.35rem;">Generated at: <code>{{ m6_comparison_dict.generated_at }}</code> · <code>citation_trace_authority</code>: <code>{{ m6_comparison_dict.citation_trace_authority }}</code></p>
+    {% if m6_comparison_dict.notes %}
+    <p style="font-size:0.8rem;margin:0.25rem 0;"><strong>Notes (backend)</strong></p>
+    <ul style="font-size:0.78rem;">
+      {% for n in m6_comparison_dict.notes %}
+      <li>{{ n }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <pre style="font-size:0.72rem;overflow:auto;max-height:28rem;">{{ m6_comparison_dict | tojson(indent=2) }}</pre>
+  </div>
+  {% else %}
+  <p style="font-size:0.85rem;color:#555;margin-top:0.5rem;"><em>No comparison stored for this page context yet — run compare above.</em></p>
+  {% endif %}
 </section>
 {% else %}
 <section style="margin-top:1rem;">

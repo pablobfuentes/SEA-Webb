@@ -1,0 +1,10 @@
+{
+  "span_m": 10.0,
+  "support_condition": "simple_span",
+  "member_role": "primary_steel_member",
+  "max_depth_m": null,
+  "architectural_restriction": null,
+  "lightweight_preference": null,
+  "fabrication_simplicity_preference": null,
+  "include_optional_rolled_beam": true
+}

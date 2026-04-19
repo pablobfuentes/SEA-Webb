@@ -1,0 +1,51 @@
+{
+  "decision_id": "dec_04e1117d0426",
+  "title": "Truss (celosía)",
+  "description": "Triangulated steel system between supports. Workflow guidance only.",
+  "catalog_key": "truss",
+  "characterization_items": [
+    {
+      "text": "Axial members can carry load efficiently over long spans (workflow heuristic v1; not a strength check).",
+      "polarity": "pro",
+      "provenance": "workflow_heuristic",
+      "reference_id": null,
+      "retrieval_query": null,
+      "citation_authority": null
+    },
+    {
+      "text": "Connections and fabrication complexity are project-specific (workflow heuristic v1).",
+      "polarity": "con",
+      "provenance": "workflow_heuristic",
+      "reference_id": null,
+      "retrieval_query": null,
+      "citation_authority": null
+    },
+    {
+      "text": "Additional project-specific pros/cons may be entered manually (placeholder; not evidence).",
+      "polarity": "pro",
+      "provenance": "manual_placeholder",
+      "reference_id": null,
+      "retrieval_query": null,
+      "citation_authority": null
+    },
+    {
+      "text": "No matching passage in the normative active primary corpus for the deterministic retrieval query for 'truss' (not_yet_evidenced).",
+      "polarity": "con",
+      "provenance": "not_yet_evidenced",
+      "reference_id": null,
+      "retrieval_query": "truss triangulation steel span",
+      "citation_authority": "normative_active_primary"
+    }
+  ],
+  "pros": [],
+  "cons": [],
+  "constraints": [],
+  "next_expected_decisions": [],
+  "suggested": true,
+  "suggestion_rank": 1,
+  "suggestion_score": 60.0,
+  "suggestion_provenance": "workflow_heuristic",
+  "status": "candidate",
+  "reactivatable": true,
+  "id": "alt_6919069e5af5"
+}

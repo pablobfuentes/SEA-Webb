@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GovernanceEventLog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "project_id", "events"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "g0.1" },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z]+_[a-f0-9]{12}$"
+    },
+    "events": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/governance_event" }
+    }
+  },
+  "$defs": {
+    "governance_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "project_id",
+        "occurred_at",
+        "event_type",
+        "rationale",
+        "actor",
+        "affected_document_ids",
+        "prior_retrieval_binding",
+        "new_retrieval_binding",
+        "prior_projection_schema_version",
+        "payload"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z]+_[a-f0-9]{12}$"
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z]+_[a-f0-9]{12}$"
+        },
+        "occurred_at": { "type": "string", "minLength": 1 },
+        "event_type": {
+          "type": "string",
+          "enum": [
+            "baseline_initialized",
+            "projection_updated",
+            "document_governance_upserted",
+            "disposition_changed",
+            "pipeline_stage_changed",
+            "truth_proposal_created",
+            "truth_proposal_approved",
+            "truth_proposal_rejected"
+          ]
+        },
+        "rationale": { "type": "string" },
+        "actor": { "type": "string", "minLength": 1 },
+        "affected_document_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "prior_retrieval_binding": {
+          "oneOf": [{ "type": "null" }, { "type": "string", "minLength": 1 }]
+        },
+        "new_retrieval_binding": {
+          "oneOf": [{ "type": "null" }, { "type": "string", "minLength": 1 }]
+        },
+        "prior_projection_schema_version": {
+          "oneOf": [{ "type": "null" }, { "type": "string" }]
+        },
+        "payload": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

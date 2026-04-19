@@ -1,0 +1,20 @@
+{
+  "project_id": "proj_2d2440288dc4",
+  "branch_id": "branch_9f6a3aecf366",
+  "node_type": "problem",
+  "title": "Primary steel member — simple span (10 m)",
+  "description": "Workflow: simple_span_steel_m3\nMember role: primary_steel_member\nSpan: 10 m (SI)\nSupport: simple_span\nNormative context: use project ActiveCodeContext and corpus (no claims in this milestone).",
+  "parent_node_id": null,
+  "state": "open",
+  "order_index": 0,
+  "depth": 0,
+  "id": "node_73b45fe6cf5e",
+  "child_node_ids": [
+    "node_c249b245374a"
+  ],
+  "linked_reference_ids": [],
+  "linked_calculation_ids": [],
+  "linked_assumption_ids": [],
+  "created_at": "2026-04-18T19:05:37.458270+00:00",
+  "updated_at": "2026-04-18T19:05:37.495262+00:00"
+}

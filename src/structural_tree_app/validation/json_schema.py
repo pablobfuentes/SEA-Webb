@@ -80,20 +80,55 @@ def validate_document_fragment_payload(data: dict[str, Any]) -> None:
     _validator("document_fragment.schema.json").validate(data)
 
 
+def validate_active_knowledge_projection_payload(data: dict[str, Any]) -> None:
+    _validator("active_knowledge_projection.schema.json").validate(data)
+
+
+def validate_document_governance_record_payload(data: dict[str, Any]) -> None:
+    _validator("document_governance_record.schema.json").validate(data)
+
+
+def validate_document_governance_index_payload(data: dict[str, Any]) -> None:
+    _validator("document_governance_index.schema.json").validate(data)
+
+
+def validate_governance_event_payload(data: dict[str, Any]) -> None:
+    _validator("governance_event.schema.json").validate(data)
+
+
+def validate_governance_event_log_payload(data: dict[str, Any]) -> None:
+    _validator("governance_event_log.schema.json").validate(data)
+
+
+def validate_document_corpus_assessment_payload(data: dict[str, Any]) -> None:
+    _validator("document_corpus_assessment.schema.json").validate(data)
+
+
+def validate_truth_proposal_payload(data: dict[str, Any]) -> None:
+    _validator("truth_proposal.schema.json").validate(data)
+
+
 __all__ = [
     "ValidationError",
+    "validate_active_knowledge_projection_payload",
     "validate_alternative_payload",
     "validate_calculation_payload",
     "validate_check_payload",
     "validate_document_fragment_payload",
     "validate_document_payload",
+    "validate_document_corpus_assessment_payload",
+    "validate_document_governance_index_payload",
+    "validate_document_governance_record_payload",
     "validate_assumption_record",
     "validate_assumptions_list_payload",
     "validate_branch_payload",
     "validate_decision_payload",
+    "validate_governance_event_log_payload",
+    "validate_governance_event_payload",
     "validate_node_payload",
     "validate_project_payload",
     "validate_reference_payload",
     "validate_revision_meta_payload",
     "validate_simple_span_workflow_input_payload",
+    "validate_truth_proposal_payload",
 ]

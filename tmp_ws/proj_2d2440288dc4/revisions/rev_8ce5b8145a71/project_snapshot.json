@@ -1,0 +1,26 @@
+{
+  "name": "t",
+  "description": "",
+  "language": "es",
+  "unit_system": "SI",
+  "active_code_context": {
+    "primary_standard_family": "AISC",
+    "active_standard_ids": [],
+    "complementary_standard_ids": [],
+    "allowed_document_ids": [],
+    "conflict_policy": "warn_and_block_on_critical"
+  },
+  "ingested_document_ids": [],
+  "authorized_document_ids": [],
+  "document_corpus_policy": "strict",
+  "status": "draft",
+  "id": "proj_2d2440288dc4",
+  "root_node_id": null,
+  "branch_ids": [],
+  "version_ids": [
+    "rev_8ce5b8145a71"
+  ],
+  "head_revision_id": "rev_8ce5b8145a71",
+  "created_at": "2026-04-18T19:05:37.386385+00:00",
+  "updated_at": "2026-04-18T19:05:37.396361+00:00"
+}

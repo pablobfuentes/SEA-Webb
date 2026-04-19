@@ -5,6 +5,214 @@ All notable changes to the **structural_tree_app_foundation** repository are doc
 
 ## [Unreleased]
 
+### Corpus readiness / approval bridge (G1.5 follow-on)
+
+**Added**
+
+- `services/corpus_readiness.py` — `evaluate_document_readiness` (normative vs supporting vs blockers aligned with `DocumentRetrievalService` + G4 projection rules); `readiness_hint_html_for_evidence` for the evidence panel.
+- Workbench: `POST /workbench/project/corpus/document/{id}/approve`, `POST .../readiness-metadata` (classification + `standard_family`); corpus list column **Readiness label**; document detail **Retrieval readiness** section + minimal approve/metadata forms.
+- `workbench/u1_evidence_display.py` — `u1_readiness_hint_html`; `evidence_panel.html` renders readiness hint after refusals when normative retrieval yields no passages or governance blocks.
+- `tests/test_corpus_readiness_bridge.py`; `docs/implementation/CORPUS_READINESS_BRIDGE_STATUS.md`.
+
+### Phase G1.5 / U0 — Corpus bootstrap workbench (upload + manual governance bootstrap)
+
+**Added**
+
+- `services/corpus_bootstrap_service.py` — manual disposition + projection list alignment, retrieval binding update, optional legacy allow-list sync from authoritative projection; governance audit events.
+- Workbench routes: `GET /workbench/project/corpus`, `POST /workbench/project/corpus/upload`, `GET /workbench/project/corpus/document/{document_id}`, `POST .../bootstrap`, `POST .../projection/binding`, `POST .../projection/sync-legacy-allowed`; templates `corpus_bootstrap.html`, `corpus_document.html`; hub link.
+- `tests/test_workbench_corpus_bootstrap.py`; `docs/implementation/PHASE_G1_5_U0_STATUS.md`.
+
+**Changed**
+
+- `docs/TEST_STRATEGY.md` — corpus bootstrap tests pointer.
+
+### Phase U1 — Workbench evidence panel + fragment source view
+
+**Added**
+
+- `LocalAssistResponse.normative_retrieval_binding` — mirrors governed normative retrieval source for UI (G4); `local_assist_response_to_dict` includes the field.
+- Workbench routes: `GET/POST /workbench/project/evidence`, `GET /workbench/project/evidence/fragment/{document_id}/{fragment_id}`; templates `evidence_panel.html`, `evidence_fragment.html`; `workbench/u1_evidence_display.py` (label helpers only).
+- `tests/test_workbench_u1.py`; `docs/implementation/PHASE_U1_STATUS.md`.
+
+**Changed**
+
+- `docs/TEST_STRATEGY.md` — U1 tests pointer.
+
+### Phase G4 — Governed active knowledge projection in retrieval + local assist
+
+**Added**
+
+- `RetrievalResponse` fields: `normative_retrieval_source`, `governance_warnings`, `governance_normative_block` (`services/retrieval_service.py`).
+- Normative retrieval branches: **`legacy_allowed_documents`** vs **`explicit_projection`** (from `ActiveKnowledgeProjection.retrieval_binding`); explicit path uses authoritative ids ± exclusions, validated against `DocumentGovernanceIndex`; refuses on missing index, empty authoritative set, or unresolved conflict on authoritative rows.
+- `RefusalItem` codes `GOVERNANCE_CONFLICT_BLOCKS_NORMATIVE`, `GOVERNANCE_EXPLICIT_PROJECTION_UNAVAILABLE` (`domain/local_assist_contract.py`); `LocalAssistOrchestrator` maps retrieval blocks to these codes and appends governance warnings.
+- `tests/test_governance_g4.py`; `docs/implementation/PHASE_G4_STATUS.md`.
+
+**Changed**
+
+- `docs/TEST_STRATEGY.md` — G4 test pointer.
+
+### Phase G3 — Truth proposals, approval, active projection mutation, governance history
+
+**Added**
+
+- `TruthProposal`, `TruthProposalProjectionDelta`, `TruthProposalDispositionChange`, `TruthProposalDecision`, `TruthProposalStatus`; JSON Schema `truth_proposal.schema.json`; codec + `validate_truth_proposal_payload`; persistence under `governance/proposals/{proposal_id}.json`.
+- `GovernanceEventType` extended with `truth_proposal_created`, `truth_proposal_approved`, `truth_proposal_rejected`; **`governance_event_log.schema.json`** event enum aligned with `governance_event.schema.json` for those types.
+- `services/truth_proposal_service.py` — deterministic `build_truth_proposal` from G2 assessment + index + projection; `persist_new_truth_proposal`, `approve_truth_proposal`, `reject_truth_proposal` (stale disposition guard; approved path updates projection to `schema_version` **g3.1** and appends audit events).
+- `tests/test_governance_g3.py`; `docs/implementation/PHASE_G3_STATUS.md`.
+
+**Changed**
+
+- `schemas/active_knowledge_projection.schema.json` — `schema_version` may be **g3.1** after an approved G3 proposal (default retrieval binding remains **legacy_allowed_documents** until explicitly set to **explicit_projection** in G4).
+- `docs/TEST_STRATEGY.md` — G3 tests pointer.
+
+### Phase G2 — Corpus assessment artifacts (overlap / contradiction / supersession **candidates**)
+
+**Added**
+
+- `CorpusAssessmentCandidateRelation`, `CorpusAssessmentCandidate`, `DocumentCorpusAssessment`; JSON Schema `document_corpus_assessment.schema.json`; codec + validation; persistence under `governance/assessments/{subject_document_id}.json`.
+- `services/corpus_assessment_service.py` — deterministic heuristics (content hash, standard family, normative roles, title/fingerprint Jaccard, publication year / edition / version metadata); **not** final governance truth.
+- Ingestion hook after G1: `_g2_assess_corpus_post_g1` in `document_service.py`.
+- `tests/test_governance_g2.py`; `docs/implementation/PHASE_G2_STATUS.md`.
+
+**Changed**
+
+- `docs/TEST_STRATEGY.md` — G2 tests pointer.
+
+### Phase G1 — Document governance pipeline (ingested → analyzed → classified)
+
+**Added**
+
+- `DocumentAnalysisSnapshot`, `DocumentClassificationSnapshot` on `DocumentGovernanceRecord`; index `schema_version` supports **g1.1** alongside **g0.1** (`schemas/document_governance_*.schema.json`).
+- `services/governance_document_pipeline.py` — post-ingest governance upsert, deterministic “complete classification” rule, `promote_document_to_classified` for explicit promotion.
+- `GovernanceStore.append_governance_events`.
+- Ingestion hook: after successful persist, G1 updates governance index + pipeline `pipeline_stage_changed` events (`document_service.py`).
+- `tests/test_governance_g1.py`; `docs/implementation/PHASE_G1_STATUS.md`.
+
+**Changed**
+
+- `docs/TEST_STRATEGY.md` — G1 tests pointer.
+
+### Phase G0 — Governance foundations (domain + persistence)
+
+**Added**
+
+- `domain/governance_enums.py`, `domain/governance_models.py`, `domain/governance_codec.py` — lifecycle/disposition enums, active knowledge projection, per-document governance index, append-only governance events/log; deterministic dict key ordering.
+- `schemas/active_knowledge_projection.schema.json`, `document_governance_record.schema.json`, `document_governance_index.schema.json`, `governance_event.schema.json`, `governance_event_log.schema.json`.
+- `services/governance_store.py` — load/save validated JSON under `{project_id}/governance/`; `initialize_governance_baseline()` (legacy retrieval binding; optional explicit opt-in).
+- `ProjectService.governance_store()`, `governance/` directory in project layout.
+- `validation/json_schema.py` — governance payload validators.
+- `tests/test_governance_g0.py`; `docs/implementation/PHASE_G0_STATUS.md`.
+
+**Changed**
+
+- `docs/TEST_STRATEGY.md` — G0 test pointer.
+
+### Roadmap — document governance + active truth (planning only)
+
+**Added**
+
+- `docs/13_document_governance_and_active_truth_rebaseline.md` — mandatory governance/active-truth layer; lifecycle states; architecture components; knowledge authority model; UI implications; workbench positioning; blockers; risks of skipping governance.
+- `docs/14_detailed_revised_execution_order_with_governed_knowledge.md` — phased plan (G0–G4 governance, U1–U6 product surfaces); per-phase objectives, dependencies, outputs, risks, out-of-scope; mapping from prior R2–R6 labels; **authoritative order** superseding naive R2→R3-only sequencing.
+
+**Changed**
+
+- `docs/12_revised_execution_order_after_rebaseline.md` — pointer to doc 14 for governed-knowledge execution order.
+- `docs/implementation/PHASE_R1_STATUS.md`, `docs/implementation/BLOCK_4A_STATUS.md`, `docs/TEST_STRATEGY.md` — roadmap transition notes.
+
+### Phase R1 — Local assist orchestration contract (backend)
+
+**Added**
+
+- `domain/local_assist_contract.py` — `LocalAssistQuery` / `LocalAssistResponse`, `OrchestrationCitation`, `EvidenceItem`, `AssumptionItem`, `DeterministicHookItem`, `RefusalItem`, `local_assist_response_to_dict()` (stable JSON keys).
+- `services/local_assist_orchestrator.py` — `LocalAssistOrchestrator`: calls `DocumentRetrievalService` only for corpus text; optional project assumptions; optional read-only deterministic calculation hooks (M5 vs other); honest bounded `answer_text` (no LLM).
+- `tests/test_local_assist_r1.py` — corpus path, refusal, citation completeness, authority separation, hooks vs citations, serialization stability, project/errors, read-only workspace proof.
+- `docs/implementation/PHASE_R1_STATUS.md`.
+
+**Changed**
+
+- `docs/TEST_STRATEGY.md` — §2.x R1 orchestrator tests.
+
+### Product rebaseline — chat-first local AI (planning only)
+
+**Added**
+
+- `docs/11_product_rebaseline_local_ai_chat_first.md` — corrected hierarchy: local AI + evidence-backed analysis primary; chat primary interface; mandatory citation and formula/logic audit panels; canvas as core explanatory surface; **alternatives tree secondary** (trace/exploration, case-based). Preserves Block 2/3/4A as infrastructure; demotes tree-first/workbench-as-product framing; defines exact-reference UI/data needs (§F), minimal blockers (§G), workbench implications (§E).
+- `docs/12_revised_execution_order_after_rebaseline.md` — phased order after rebaseline (R1 orchestration → R2 evidence panel → R3 chat shell → R4 audit panel → R5 canvas → R6 secondary tree/workbench integration); **Block 4A-M7 demoted** pending R3+; optional future **Block 5** label for chat-first work.
+
+**Changed**
+
+- `docs/implementation/BLOCK_4A_STATUS.md` — transition note: rebaseline recorded; M7 paused/demoted strategically.
+- `docs/TEST_STRATEGY.md` — rebaseline pointer; evidence/chat-first testing emphasis alongside existing tree integration tests.
+
+### Block 4A — M6 — Branch comparison + revision snapshot (workbench)
+
+**Added**
+
+- `workbench/m6_workbench_view.py` — static legends for `comparison_field_sources` and `metric_provenance` (template-only labels).
+- `workbench/m6_comparison_file.py` — persist last `BranchComparisonResult.to_dict()` at `{project_id}/workbench_m6_last_comparison.json` (session cookies cannot hold full JSON).
+- `tests/test_workbench_m6.py` — compare live + revision replay, read-only branch file proof, error paths, unknown `?rev=`.
+
+**Changed**
+
+- `workbench/pages.py` — `POST /workbench/project/workflow/compare`, `POST /workbench/project/workflow/revision-create`; `GET .../workflow?rev=` loads revision snapshot context for comparison (read-only).
+- `workbench/templates/simple_span_workflow.html` — M6 section: branch checkboxes, field-source / internal-trace banners, revision list links, last comparison JSON.
+- `workbench/templates/base.html` — footer text (4A scope).
+- `tests/test_workbench_m4.py` — footer assertion aligned with base template.
+- `docs/implementation/BLOCK_4A_STATUS.md`, `docs/TEST_STRATEGY.md`.
+
+### Block 4A — M5 — Materialize + M5 preliminary (workbench)
+
+**Added**
+
+- `services/simple_span_workflow_input_store.py` — persist/load `simple_span_workflow_input.json` at project root when M3 setup runs (enables M5 `SimpleSpanWorkflowInput` without recomputing from problem text).
+- `workbench/m5_workbench_view.py` — read-only materialized-branch list + persisted M5 calc/check/assumption view for templates.
+- `tests/test_workbench_m5.py` — materialize + M5 run + duplicate refusal + bad branch + reload persistence + preliminary copy.
+
+**Changed**
+
+- `services/simple_span_steel_workflow.py` — calls `save_simple_span_workflow_input` after successful `setup_initial_workflow`.
+- `workbench/pages.py` — `POST /workbench/project/workflow/materialize`, `POST /workbench/project/workflow/m5-run`; GET workflow context includes M5 panel data.
+- `workbench/templates/simple_span_workflow.html` — M5 section: preliminary disclaimers, per-alternative materialize, per-branch M5 run, persisted calculation/check/assumption JSON panels.
+- `docs/implementation/BLOCK_4A_STATUS.md` — M5 complete; milestone order aligned with UI scope.
+- `docs/TEST_STRATEGY.md` — §2.5 M5 workbench tests.
+
+### Developer ergonomics — Windows workbench launcher
+
+**Added**
+
+- `scripts/run_workbench.ps1` — resolves repo root, requires `.venv` + editable `structural_tree_app.workbench`, sets default `STRUCTURAL_TREE_WORKSPACE` to `<repo>/workspace`, optional `-Reload` / `-NoBrowser` / `-Port`, opens browser at `/workbench` after a short delay.
+- `run_workbench.bat` — one-double-click wrapper calling the PowerShell script with `ExecutionPolicy Bypass`.
+
+**Changed**
+
+- `README.md` — Block 4A: first-time setup, daily launcher usage, `-Reload` / health reminder, «connection failed» troubleshooting.
+- `docs/TEST_STRATEGY.md` — §2.5 note on Windows launcher vs automated workbench tests.
+
+**Fixed**
+
+- `pyproject.toml` — `workbench` extra now includes `itsdangerous` (required by Starlette `SessionMiddleware`; was not always installed transitively).
+
+### Block 4A — M4 — Alternatives & characterization inspection
+
+**Added**
+
+- `workbench/provenance_display.py` — static headings for characterization provenance strings.
+- `tests/test_workbench_m4.py` — provenance substrings, suggestion columns, section headings in HTML.
+
+**Changed**
+
+- `workbench/workflow_summary.py` — alternative rows include description, suggestion score/provenance, `characterization_items`; `suggested_top_k`; suggested vs other eligible groupings.
+- `workbench/pages.py` — provenance legend for template (from `ALL_CHARACTERIZATION_PROVENANCES`).
+- `workbench/templates/simple_span_workflow.html` — authority banner, legend, `<details>` per alternative, characterization table (polarity, raw provenance, reference/retrieval fields).
+- `docs/09_block_4a_implementation_plan.md` — milestone table + traceability aligned with execution order (M3 setup vs M4 inspection).
+- `docs/implementation/BLOCK_4A_STATUS.md` — M4 complete; M5–M7 descriptions clarified.
+- `docs/FAIL_LOG.md` — entry for accidental `simple_span_workflow_input.schema.json` overwrite during M3 (restored from git).
+- `PBS Structural Engineer App.txt` — new **§19 Block 4A** (M2–M4 delivered, pending M5–M7, manual UI test guide).
+
+**Verification**
+
+- `python -m pytest tests/ -q` — 77 passed.
+
 ### Block 4A — M3 — Project hub + simple-span workflow setup
 
 **Added**

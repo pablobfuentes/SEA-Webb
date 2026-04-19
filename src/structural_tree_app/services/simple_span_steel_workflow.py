@@ -15,6 +15,7 @@ from structural_tree_app.domain.simple_span_workflow import (
 )
 from structural_tree_app.services.project_service import ProjectService
 from structural_tree_app.services.simple_span_alternative_characterization import apply_simple_span_m4_characterization
+from structural_tree_app.services.simple_span_workflow_input_store import save_simple_span_workflow_input
 from structural_tree_app.services.tree_workspace import TreeWorkspace
 from structural_tree_app.validation.json_schema import validate_simple_span_workflow_input_payload
 
@@ -102,6 +103,7 @@ class SimpleSpanSteelWorkflowService:
         apply_simple_span_m4_characterization(tw, decision.id)
 
         titles = [tw.store.load_alternative(aid).title for aid in decision.alternative_ids]
+        save_simple_span_workflow_input(project_service, live.id, inp)
         return SimpleSpanWorkflowResult(
             workflow_id=WORKFLOW_ID,
             main_branch_id=branch.id,

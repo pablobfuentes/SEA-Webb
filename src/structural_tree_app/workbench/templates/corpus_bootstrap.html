@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Corpus bootstrap{% endblock %}
+{% block heading %}Corpus bootstrap — upload & governed projection{% endblock %}
+{% block content %}
+<p><a href="/workbench">← Project hub</a></p>
+
+<p>Project <code>{{ project_id }}</code>. Workspace: <code>{{ workspace_path }}</code></p>
+
+<p><strong>Lifecycle labels</strong> (governance): ingested → analyzed → classified → … · disposition:
+<code>pending_review</code>, <code>active</code> (authoritative), <code>supporting</code>,
+<code>superseded</code>, <code>conflicting_unresolved</code>, <code>rejected</code>.
+Upload/ingest does <strong>not</strong> auto-activate documents.</p>
+
+{% if msg %}<p role="status" style="color:#060;"><strong>Notice:</strong> {{ msg }}</p>{% endif %}
+{% if err %}<p role="alert" style="color:#600;"><strong>Error:</strong> {{ err }}</p>{% endif %}
+
+<section aria-labelledby="up-h" style="margin-top:1rem;">
+  <h2 id="up-h" style="font-size:1rem;">Upload documents</h2>
+  <p>PDF (text layer) and .txt supported for ingestion. Same bytes twice → <code>duplicate_skipped</code>.
+  Scanned PDFs without text → <code>ocr_deferred</code>.</p>
+  <form method="post" action="/workbench/project/corpus/upload" enctype="multipart/form-data">
+    <p><input type="file" name="files" multiple required></p>
+    <p><button type="submit">Upload &amp; ingest</button></p>
+  </form>
+</section>
+
+<section aria-labelledby="proj-h" style="margin-top:1.5rem;">
+  <h2 id="proj-h" style="font-size:1rem;">Active knowledge projection</h2>
+  {% if projection %}
+  <ul>
+    <li><code>retrieval_binding</code>: <strong>{{ projection.retrieval_binding.value }}</strong>
+      {% if binding_explicit %} (normative retrieval uses projection authoritative lists){% else %}
+      (normative retrieval uses legacy <code>allowed_document_ids</code> until you switch){% endif %}</li>
+    <li><code>authoritative_document_ids</code>: {{ projection.authoritative_document_ids | join(', ') or '—' }}</li>
+    <li><code>supporting_document_ids</code>: {{ projection.supporting_document_ids | join(', ') or '—' }}</li>
+    <li><code>excluded_from_authoritative_document_ids</code>: {{ projection.excluded_from_authoritative_document_ids | join(', ') or '—' }}</li>
+    <li><code>schema_version</code>: {{ projection.schema_version }} · updated {{ projection.updated_at }}</li>
+  </ul>
+  <form method="post" action="/workbench/project/corpus/projection/binding" style="margin-top:0.5rem;">
+    <label>Retrieval binding
+      <select name="retrieval_binding">
+        <option value="legacy_allowed_documents" {% if not binding_explicit %}selected{% endif %}>legacy_allowed_documents</option>
+        <option value="explicit_projection" {% if binding_explicit %}selected{% endif %}>explicit_projection</option>
+      </select>
+    </label>
+    <button type="submit">Save binding</button>
+  </form>
+  <form method="post" action="/workbench/project/corpus/projection/sync-legacy-allowed" style="margin-top:0.5rem;">
+    <button type="submit">Sync legacy allow-list from authoritative projection</button>
+  </form>
+  <p style="font-size:0.85rem;">Sync copies authoritative (minus excluded) into <code>project.active_code_context.allowed_document_ids</code> for legacy normative path; audited.</p>
+  {% else %}
+  <p><em>No projection file yet — first successful ingest initializes governance baseline.</em></p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="tbl-h" style="margin-top:1.5rem;">
+  <h2 id="tbl-h" style="font-size:1rem;">Ingested documents</h2>
+  {% if corpus_rows %}
+  <table border="1" cellpadding="6" style="border-collapse:collapse;background:#fff;">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>document_id</th>
+        <th>Pipeline</th>
+        <th>Disposition</th>
+        <th>Readiness label</th>
+        <th>Fragments</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in corpus_rows %}
+      <tr>
+        <td>{{ row.title }}</td>
+        <td><code>{{ row.document_id }}</code></td>
+        <td>{{ row.pipeline_stage }}</td>
+        <td>{{ row.disposition }}</td>
+        <td><code style="font-size:0.8rem;">{{ row.readiness_label }}</code></td>
+        <td>{{ row.fragment_count }}</td>
+        <td><a href="/workbench/project/corpus/document/{{ row.document_id }}">Detail</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p><em>No documents ingested yet.</em></p>
+  {% endif %}
+</section>
+{% endblock %}
