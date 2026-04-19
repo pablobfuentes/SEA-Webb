@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Assistant (U2){% endblock %}
+{% block heading %}Assistant — chat-first shell (U2){% endblock %}
+{% block extra_css %}
+.chat-shell.evidence-panel { max-width: 52rem; }
+.chat-shell .meta { font-size: 0.9rem; color: #333; margin-bottom: 0.75rem; }
+.chat-shell .provenance { border: 1px solid #999; padding: 0.5rem 0.65rem; background: #fafafa; margin: 0.75rem 0; }
+.chat-shell .warn { border-left: 4px solid #a60; padding: 0.35rem 0.5rem; background: #fff8f0; margin: 0.5rem 0; }
+.chat-shell .refusal { border-left: 4px solid #a00; padding: 0.5rem 0.65rem; background: #fff5f5; margin: 0.75rem 0; }
+.chat-shell .refusal.gov { border-left-color: #606; background: #faf5ff; }
+.chat-shell .hooks { border: 1px dashed #666; padding: 0.5rem; margin-top: 1rem; background: #f9f9f9; }
+.chat-shell .assume { border: 1px solid #aaa; padding: 0.5rem; margin-top: 0.75rem; background: #f5f5f5; }
+.chat-shell details { margin: 0.4rem 0; border: 1px solid #ccc; padding: 0.35rem 0.5rem; background: #fff; }
+.chat-shell summary { cursor: pointer; font-weight: 600; }
+.chat-shell .snippet { white-space: pre-wrap; margin: 0.35rem 0 0; font-size: 0.92rem; }
+.chat-shell .badge { display: inline-block; font-size: 0.75rem; padding: 0.1rem 0.35rem; border-radius: 2px; margin-right: 0.35rem; }
+.chat-shell .badge.auth { background: #e0f0ff; border: 1px solid #069; }
+.chat-shell .badge.sup { background: #eef6ee; border: 1px solid #363; }
+.chat-shell .readiness-hint { border-left: 4px solid #069; padding: 0.45rem 0.6rem; background: #f0f8ff; margin: 0.75rem 0; font-size: 0.92rem; }
+.chat-shell .chat-form { background: #fff; border: 1px solid #ccc; padding: 0.75rem; margin: 1rem 0; }
+{% endblock %}
+{% block content %}
+<section class="chat-shell evidence-panel" aria-labelledby="u2-h">
+  <p class="meta">
+    <a href="/workbench">← Project hub</a> ·
+    <a href="/workbench/project/evidence">Structured evidence panel (U1)</a> ·
+    <a href="/workbench/project/corpus">Corpus</a> ·
+    <a href="/workbench/project/workflow">Workflow</a>
+  </p>
+  <h2 id="u2-h" style="font-size:1rem;">Primary assistant</h2>
+  <p class="meta">Questions run through <code>LocalAssistOrchestrator</code> only — same governed retrieval as the evidence panel. Answers are subordinate to citations; no LLM synthesis beyond the orchestrator disclosure.</p>
+
+  {% if err %}<p role="alert" style="color:#600;"><strong>Error:</strong> {{ err }}</p>{% endif %}
+
+  <div class="chat-form">
+    <form method="post" action="/workbench/project/chat/query">
+      <p><label for="q-u2">Your question / search text</label><br>
+        <textarea id="q-u2" name="retrieval_query_text" rows="4" style="width:100%;max-width:42rem;" required placeholder="Describe the structural question; lexical match over approved corpus fragments…">{{ form_query or '' }}</textarea>
+      </p>
+      <p>
+        <label>Citation authority
+          <select name="citation_authority">
+            <option value="normative_active_primary" {% if form_mode == 'normative_active_primary' or not form_mode %}selected{% endif %}>normative_active_primary (authoritative primary gate)</option>
+            <option value="approved_ingested" {% if form_mode == 'approved_ingested' %}selected{% endif %}>approved_ingested (supporting / audit corpus)</option>
+          </select>
+        </label>
+      </p>
+      <p>
+        <label><input type="checkbox" name="include_project_assumptions" value="1" {% if form_inc_asm %}checked{% endif %}> Include project assumptions (non-citation)</label><br>
+        <label><input type="checkbox" name="include_deterministic_hooks" value="1" {% if form_inc_hooks %}checked{% endif %}> Include deterministic hooks (M5 / calc — not citations)</label><br>
+        <label><input type="checkbox" name="match_project_primary_standard_family" value="1" {% if form_match_fam %}checked{% endif %}> Match project primary standard family (normative mode)</label>
+      </p>
+      <p><label>Limit <input name="retrieval_limit" type="number" min="1" max="100" value="{{ form_limit or 20 }}" style="width:4rem;"></label></p>
+      <p><button type="submit">Ask assistant</button></p>
+    </form>
+  </div>
+
+  {% if assist %}
+  {% include "partials/local_assist_result.html" %}
+  {% endif %}
+</section>
+{% endblock %}

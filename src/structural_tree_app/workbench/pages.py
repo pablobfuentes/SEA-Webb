@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from structural_tree_app.services.branch_comparison import BranchComparisonError, BranchComparisonService
-from structural_tree_app.services.project_service import ProjectPersistenceError
+from structural_tree_app.services.project_service import ProjectPersistenceError, ProjectService
 from structural_tree_app.services.simple_span_m5_service import (
     METHOD_LABEL as M5_METHOD_LABEL,
     SimpleSpanM5Error,
@@ -55,6 +55,69 @@ from structural_tree_app.workbench.u1_evidence_display import (
 
 router = APIRouter(tags=["ui"])
 _templates = Jinja2Templates(directory=str(get_templates_dir()))
+
+
+def _u1_template_context(
+    session_pid: str,
+    *,
+    assist: object,
+    err: str | None,
+    form_query: str,
+    form_mode: str,
+    form_limit: int,
+    form_inc_asm: bool,
+    form_inc_hooks: bool,
+    form_match_fam: bool,
+) -> dict[str, object]:
+    """Shared Jinja context for U1 evidence panel and U2 chat shell (same orchestrator output)."""
+    return {
+        "assist": assist,
+        "err": err,
+        "project_id": session_pid,
+        "form_query": form_query,
+        "form_mode": form_mode,
+        "form_limit": form_limit,
+        "form_inc_asm": form_inc_asm,
+        "form_inc_hooks": form_inc_hooks,
+        "form_match_fam": form_match_fam,
+        "u1_provenance": u1_retrieval_provenance_headline,
+        "u1_cite_badge": u1_citation_row_badge,
+        "u1_summary_label": u1_response_authority_summary_label,
+        "u1_gov_refusal": u1_refusal_is_governance_block,
+        "u1_readiness_hint": lambda a, pid=session_pid: u1_readiness_hint_html(a, pid),
+    }
+
+
+def _local_assist_run(
+    ps: ProjectService,
+    session_pid: str,
+    *,
+    retrieval_query_text: str,
+    citation_authority: str,
+    retrieval_limit: int,
+    include_project_assumptions: str | None,
+    include_deterministic_hooks: str | None,
+    match_project_primary_standard_family: str | None,
+) -> tuple[object, str, int, bool, bool, bool]:
+    """Run ``LocalAssistOrchestrator`` with the same form semantics as U1/U2."""
+    mode = citation_authority.strip()
+    if mode not in ("normative_active_primary", "approved_ingested"):
+        mode = "normative_active_primary"
+    lim = max(1, min(100, int(retrieval_limit)))
+    inc_asm = include_project_assumptions == "1"
+    inc_hooks = include_deterministic_hooks == "1"
+    match_fam = match_project_primary_standard_family == "1"
+    q = LocalAssistQuery(
+        project_id=session_pid,
+        retrieval_query_text=retrieval_query_text,
+        citation_authority=mode,  # type: ignore[arg-type]
+        retrieval_limit=lim,
+        include_project_assumptions=inc_asm,
+        include_deterministic_hooks=inc_hooks,
+        match_project_primary_standard_family=match_fam,
+    )
+    assist = LocalAssistOrchestrator(ps).run(q)
+    return assist, mode, lim, inc_asm, inc_hooks, match_fam
 
 
 def _redirect_workbench(msg: str | None = None, err: str | None = None) -> RedirectResponse:
@@ -459,22 +522,17 @@ def evidence_panel_get(
     return _templates.TemplateResponse(
         request,
         "evidence_panel.html",
-        {
-            "assist": None,
-            "err": err,
-            "project_id": session_pid,
-            "form_query": "",
-            "form_mode": "normative_active_primary",
-            "form_limit": 20,
-            "form_inc_asm": True,
-            "form_inc_hooks": False,
-            "form_match_fam": True,
-            "u1_provenance": u1_retrieval_provenance_headline,
-            "u1_cite_badge": u1_citation_row_badge,
-            "u1_summary_label": u1_response_authority_summary_label,
-            "u1_gov_refusal": u1_refusal_is_governance_block,
-            "u1_readiness_hint": lambda a, pid=session_pid: u1_readiness_hint_html(a, pid),
-        },
+        _u1_template_context(
+            session_pid,
+            assist=None,
+            err=err,
+            form_query="",
+            form_mode="normative_active_primary",
+            form_limit=20,
+            form_inc_asm=True,
+            form_inc_hooks=False,
+            form_match_fam=True,
+        ),
     )
 
 
@@ -503,41 +561,120 @@ def evidence_panel_query(
         request.session.pop(SESSION_PROJECT_KEY, None)
         return _redirect_workbench(err=str(e))
 
-    mode = citation_authority.strip()
-    if mode not in ("normative_active_primary", "approved_ingested"):
-        mode = "normative_active_primary"
-    lim = max(1, min(100, int(retrieval_limit)))
-
-    q = LocalAssistQuery(
-        project_id=session_pid,
+    assist, mode, lim, inc_asm, inc_hooks, match_fam = _local_assist_run(
+        ps,
+        session_pid,
         retrieval_query_text=retrieval_query_text,
-        citation_authority=mode,  # type: ignore[arg-type]
-        retrieval_limit=lim,
-        include_project_assumptions=include_project_assumptions == "1",
-        include_deterministic_hooks=include_deterministic_hooks == "1",
-        match_project_primary_standard_family=match_project_primary_standard_family == "1",
+        citation_authority=citation_authority,
+        retrieval_limit=retrieval_limit,
+        include_project_assumptions=include_project_assumptions,
+        include_deterministic_hooks=include_deterministic_hooks,
+        match_project_primary_standard_family=match_project_primary_standard_family,
     )
-    assist = LocalAssistOrchestrator(ps).run(q)
 
     return _templates.TemplateResponse(
         request,
         "evidence_panel.html",
-        {
-            "assist": assist,
-            "err": None,
-            "project_id": session_pid,
-            "form_query": retrieval_query_text,
-            "form_mode": mode,
-            "form_limit": lim,
-            "form_inc_asm": include_project_assumptions == "1",
-            "form_inc_hooks": include_deterministic_hooks == "1",
-            "form_match_fam": match_project_primary_standard_family == "1",
-            "u1_provenance": u1_retrieval_provenance_headline,
-            "u1_cite_badge": u1_citation_row_badge,
-            "u1_summary_label": u1_response_authority_summary_label,
-            "u1_gov_refusal": u1_refusal_is_governance_block,
-            "u1_readiness_hint": lambda a, pid=session_pid: u1_readiness_hint_html(a, pid),
-        },
+        _u1_template_context(
+            session_pid,
+            assist=assist,
+            err=None,
+            form_query=retrieval_query_text,
+            form_mode=mode,
+            form_limit=lim,
+            form_inc_asm=inc_asm,
+            form_inc_hooks=inc_hooks,
+            form_match_fam=match_fam,
+        ),
+    )
+
+
+@router.get(
+    "/workbench/project/chat",
+    response_class=HTMLResponse,
+    response_model=None,
+)
+def chat_shell_get(
+    request: Request,
+    ps: ProjectServiceDep,
+    session_pid: SessionProjectIdDep,
+    err: str | None = Query(None),
+) -> HTMLResponse | RedirectResponse:
+    """U2 — primary chat shell (same LocalAssistOrchestrator as U1 evidence)."""
+    if not session_pid:
+        return _redirect_workbench(err="Select or create a project first (project hub).")
+    try:
+        ps.load_project(session_pid)
+    except ProjectPersistenceError as e:
+        request.session.pop(SESSION_PROJECT_KEY, None)
+        return _redirect_workbench(err=str(e))
+    return _templates.TemplateResponse(
+        request,
+        "chat_shell.html",
+        _u1_template_context(
+            session_pid,
+            assist=None,
+            err=err,
+            form_query="",
+            form_mode="normative_active_primary",
+            form_limit=20,
+            form_inc_asm=True,
+            form_inc_hooks=False,
+            form_match_fam=True,
+        ),
+    )
+
+
+@router.post(
+    "/workbench/project/chat/query",
+    response_class=HTMLResponse,
+    response_model=None,
+)
+def chat_shell_query(
+    request: Request,
+    ps: ProjectServiceDep,
+    session_pid: SessionProjectIdDep,
+    retrieval_query_text: str = Form(...),
+    citation_authority: str = Form("normative_active_primary"),
+    retrieval_limit: int = Form(20),
+    include_project_assumptions: str | None = Form(None),
+    include_deterministic_hooks: str | None = Form(None),
+    match_project_primary_standard_family: str | None = Form(None),
+) -> HTMLResponse | RedirectResponse:
+    """U2 — submit question through chat shell; thin wrapper over LocalAssistOrchestrator."""
+    if not session_pid:
+        return _redirect_workbench(err="Select or create a project first (project hub).")
+    try:
+        ps.load_project(session_pid)
+    except ProjectPersistenceError as e:
+        request.session.pop(SESSION_PROJECT_KEY, None)
+        return _redirect_workbench(err=str(e))
+
+    assist, mode, lim, inc_asm, inc_hooks, match_fam = _local_assist_run(
+        ps,
+        session_pid,
+        retrieval_query_text=retrieval_query_text,
+        citation_authority=citation_authority,
+        retrieval_limit=retrieval_limit,
+        include_project_assumptions=include_project_assumptions,
+        include_deterministic_hooks=include_deterministic_hooks,
+        match_project_primary_standard_family=match_project_primary_standard_family,
+    )
+
+    return _templates.TemplateResponse(
+        request,
+        "chat_shell.html",
+        _u1_template_context(
+            session_pid,
+            assist=assist,
+            err=None,
+            form_query=retrieval_query_text,
+            form_mode=mode,
+            form_limit=lim,
+            form_inc_asm=inc_asm,
+            form_inc_hooks=inc_hooks,
+            form_match_fam=match_fam,
+        ),
     )
 
 

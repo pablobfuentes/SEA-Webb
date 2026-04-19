@@ -5,6 +5,22 @@ All notable changes to the **structural_tree_app_foundation** repository are doc
 
 ## [Unreleased]
 
+### Phase U2 — Chat-first workbench shell
+
+**Added**
+
+- `GET /workbench/project/chat`, `POST /workbench/project/chat/query` — primary assistant surface; same `LocalAssistOrchestrator` path as U1 (`_local_assist_run`, `_u1_template_context` in `workbench/pages.py`).
+- Template `workbench/templates/chat_shell.html`; shared assist block `workbench/templates/partials/local_assist_result.html` (U1 evidence panel includes the partial).
+- Project hub link order: Assistant (U2) first when a project is selected.
+
+**Changed**
+
+- `docs/TEST_STRATEGY.md` — U2 tests pointer; `README.md` — workbench routes paragraph mentions U2/U1.
+
+**Tests**
+
+- `tests/test_workbench_u2.py`; `docs/implementation/PHASE_U2_STATUS.md`.
+
 ### Corpus readiness / approval bridge (G1.5 follow-on)
 
 **Added**

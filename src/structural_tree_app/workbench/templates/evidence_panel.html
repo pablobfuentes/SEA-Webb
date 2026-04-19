@@ -20,8 +20,8 @@
 {% endblock %}
 {% block content %}
 <section class="evidence-panel" aria-labelledby="u1-h">
-  <p class="meta"><a href="/workbench">← Project hub</a> · <a href="/workbench/project/workflow">Workflow</a></p>
-  <h2 id="u1-h" style="font-size:1rem;">Structured retrieval preview (no chat thread; no LLM)</h2>
+  <p class="meta"><a href="/workbench">← Project hub</a> · <a href="/workbench/project/chat">Assistant (U2)</a> · <a href="/workbench/project/workflow">Workflow</a></p>
+  <h2 id="u1-h" style="font-size:1rem;">Structured retrieval preview (same engine as chat)</h2>
   <p class="meta">This panel surfaces <code>LocalAssistResponse</code> from <code>LocalAssistOrchestrator</code> only. Retrieval remains the authority gate.</p>
 
   {% if err %}<p role="alert" style="color:#600;"><strong>Error:</strong> {{ err }}</p>{% endif %}
@@ -46,91 +46,7 @@
   </form>
 
   {% if assist %}
-  <article aria-label="Assist response">
-    <h3 style="font-size:1rem;">Response</h3>
-    <p class="meta"><strong>answer_status:</strong> <code>{{ assist.answer_status }}</code>
-      · <strong>answer_status_detail:</strong> <code>{{ assist.answer_status_detail }}</code></p>
-    <p class="meta"><strong>response_authority_summary:</strong> {{ u1_summary_label(assist.response_authority_summary) }} (<code>{{ assist.response_authority_summary }}</code>)</p>
-
-    <div class="provenance" role="region" aria-label="Retrieval provenance">
-      <strong>Retrieval provenance</strong>
-      <p style="margin:0.35rem 0 0;">{{ u1_provenance(assist) }}</p>
-      <p class="meta" style="margin:0.25rem 0 0;"><code>citation_authority_requested={{ assist.citation_authority_requested }}</code>
-        · <code>normative_retrieval_binding={{ assist.normative_retrieval_binding }}</code></p>
-    </div>
-
-    {% if assist.warnings %}
-    <div class="warn" role="region" aria-label="Warnings">
-      <strong>Warnings</strong>
-      <ul style="margin:0.25rem 0 0 1rem;">{% for w in assist.warnings %}<li>{{ w }}</li>{% endfor %}</ul>
-    </div>
-    {% endif %}
-
-    {% if assist.refusal_reasons %}
-    {% for r in assist.refusal_reasons %}
-    <div class="refusal{% if u1_gov_refusal(r) %} gov{% endif %}" role="alert">
-      <strong>Refusal</strong> <code>{{ r.code }}</code>
-      <p style="margin:0.35rem 0 0; white-space: pre-wrap;">{{ r.message }}</p>
-    </div>
-    {% endfor %}
-    {% endif %}
-
-    {{ u1_readiness_hint(assist)|safe }}
-
-    <h4 style="font-size:0.95rem; margin-top:1rem;">answer_text</h4>
-    <pre style="white-space:pre-wrap;background:#fff;border:1px solid #ccc;padding:0.5rem;font-size:0.9rem;">{{ assist.answer_text }}</pre>
-
-    {% if assist.citations %}
-    <h4 style="font-size:0.95rem;">Citations &amp; evidence slots</h4>
-    <ol>
-      {% for c in assist.citations %}
-      <li style="margin-bottom:0.75rem;">
-        <span class="badge {% if c.authority_class == 'authoritative_normative_active_primary' %}auth{% else %}sup{% endif %}">{{ u1_cite_badge(assist, c.authority_class) }}</span>
-        <strong>{{ c.document_title }}</strong>
-        <span class="meta">score={{ c.score }}</span>
-        <details>
-          <summary>Excerpt &amp; identifiers</summary>
-          <p class="snippet">{{ c.snippet }}</p>
-          <p class="meta">
-            <a href="/workbench/project/evidence/fragment/{{ c.document_id }}/{{ c.fragment_id }}">Open source fragment (local)</a>
-            · <code>citation_id={{ c.citation_id }}</code>
-            · <code>document_id={{ c.document_id }}</code> · <code>fragment_id={{ c.fragment_id }}</code>
-            · chunk {{ c.chunk_index }}
-            · pages {% if c.page_start is not none %}{{ c.page_start }}{% else %}?{% endif %}–{% if c.page_end is not none %}{{ c.page_end }}{% else %}?{% endif %}
-          </p>
-          <p class="meta"><code>content_hash={{ c.content_hash[:16] }}…</code> · <code>fragment_content_hash={{ c.fragment_content_hash[:16] }}…</code></p>
-        </details>
-      </li>
-      {% endfor %}
-    </ol>
-    <p class="meta">Evidence item ids (parallel slots): {% for e in assist.evidence_items %}<code>{{ e.evidence_id }}</code>→<code>{{ e.citation_id }}</code>{% if not loop.last %} · {% endif %}{% endfor %}</p>
-    {% endif %}
-
-    {% if assist.deterministic_hooks %}
-    <div class="hooks" role="region" aria-label="Deterministic hooks">
-      <strong>Deterministic hooks (not document evidence)</strong>
-      <p class="meta" style="margin-top:0;">Engine / preliminary outputs — do not treat as normative citations.</p>
-      <ul>
-        {% for h in assist.deterministic_hooks %}
-        <li><code>{{ h.hook_id }}</code> · calc <code>{{ h.calculation_id }}</code> · {{ h.method_label }} · <em>{{ h.authority_boundary }}</em>
-          <br><span class="meta">{{ h.disclosure }}</span></li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-
-    {% if assist.assumptions %}
-    <div class="assume" role="region" aria-label="Assumptions">
-      <strong>Project assumptions</strong>
-      <p class="meta" style="margin-top:0;">{{ assist.assumptions[0].authority_note }}</p>
-      <ul>
-        {% for a in assist.assumptions %}
-        <li><strong>{{ a.label }}</strong> = {{ a.value }}{% if a.unit %} {{ a.unit }}{% endif %} <span class="meta">({{ a.source_type }})</span>{% if a.rationale %} — {{ a.rationale }}{% endif %}</li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-  </article>
+  {% include "partials/local_assist_result.html" %}
   {% endif %}
 </section>
 {% endblock %}
